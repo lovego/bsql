@@ -70,3 +70,20 @@ func TestScanStruct(t *testing.T) {
 	}
 	t.Logf("%+v", got)
 }
+
+func TestScanSlice(t *testing.T) {
+	var got []testUser
+	v := reflect.ValueOf(&got)
+	if err := ScanSlice(testUsers, v.Elem(), v); err != nil {
+		t.Fatal(err)
+	}
+	expect := []testUser{
+		{1, "李雷", "男", testTime}, {2, "韩梅梅", "女", testTime},
+		{3, "Lili", "女", testTime}, {4, "Lucy", "女", testTime},
+		{5, "Mr Gao", "男", testTime}, {6, "Uncle Wang", "男", testTime},
+	}
+	if !reflect.DeepEqual(got, expect) {
+		t.Fatalf("unexpected: %+v", got)
+	}
+	t.Logf("%+v", got)
+}

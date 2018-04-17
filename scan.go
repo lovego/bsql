@@ -62,13 +62,14 @@ func ScanSlice(scanner Scanner, target, p reflect.Value) error {
 	fieldNames := Columns2Fields(columnNames)
 	elemType := target.Type().Elem()
 	for scanner.Next() {
-		elemValue := reflect.Zero(elemType)
-		if fieldsAddrs, err := StructFieldsAddrs(elemValue, fieldNames); err != nil {
-			return err
-		} else if err := scanner.Scan(fieldsAddrs...); err != nil {
+		target = reflect.Append(target, reflect.Zero(elemType))
+		fieldsAddrs, err := StructFieldsAddrs(target.Index(target.Len()-1), fieldNames)
+		if err != nil {
 			return err
 		}
-		target = reflect.Append(target, elemValue)
+		if err := scanner.Scan(fieldsAddrs...); err != nil {
+			return err
+		}
 	}
 	p.Elem().Set(target)
 	return nil
