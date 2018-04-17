@@ -31,19 +31,3 @@ func TestColumn2Fields(t *testing.T) {
 		t.Errorf("expect %v,got %v", expect, got)
 	}
 }
-
-func TestStructFieldsAddrs(t *testing.T) {
-	var bsqlTest struct {
-		Id     int64
-		Name   string
-		Exists bool
-	}
-	addrs, err := StructFieldsAddrs(reflect.ValueOf(&bsqlTest).Elem(), []string{"Id", "Name",
-		"Exists"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(addrs) != 3 {
-		t.Fatalf("unexpted addrs size: %d", len(addrs))
-	}
-}

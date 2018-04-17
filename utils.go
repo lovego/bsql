@@ -24,15 +24,3 @@ func Column2Field(column string) string {
 	}
 	return strings.Join(parts, "")
 }
-
-func StructFieldsAddrs(structValue reflect.Value, fieldNames []string) ([]interface{}, error) {
-	var result []interface{}
-	for _, fieldName := range fieldNames {
-		if field := structValue.FieldByName(fieldName); field.IsValid() {
-			result = append(result, field.Addr().Interface())
-		} else {
-			return nil, errors.New("no field: '" + fieldName + "' in struct.")
-		}
-	}
-	return result, nil
-}
