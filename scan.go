@@ -1,5 +1,11 @@
 package psql
 
+import (
+	"database/sql"
+	"errors"
+	"reflect"
+)
+
 func Scan(rows *sql.Rows, data interface{}) error {
 	p := reflect.ValueOf(data)
 	if p.Kind() != reflect.Ptr {
@@ -8,23 +14,13 @@ func Scan(rows *sql.Rows, data interface{}) error {
 	target := p.Elem()
 	switch target.Kind() {
 	case reflect.Struct:
-		fieldNames := Columns2Fields(rows.Columns())
-		if rows.Next() {
-			if err := rows.Scan(StructFieldsAddrs(target, fieldNames)...); err != nil {
-				return err
-			}
+		if err := ScanStruct(rows, target); err != nil {
+			return err
 		}
 	case reflect.Slice:
-		elemType := target.Type().Elem()
-		fieldNames := Columns2Fields(rows.Columns())
-		for rows.Next() {
-			elemValue := reflect.Zero(elemType)
-			if err := rows.Scan(StructFieldsAddrs(elemValue, fieldNames)...); err != nil {
-				return err
-			}
-			target = reflect.Append(target, elemValue)
+		if err := ScanSlice(rows, target, p); err != nil {
+			return err
 		}
-		p.Elem().Set(target)
 	default:
 		if rows.Next() {
 			if err := rows.Scan(p); err != nil {
@@ -33,4 +29,41 @@ func Scan(rows *sql.Rows, data interface{}) error {
 		}
 	}
 	return rows.Err()
+}
+
+func ScanStruct(rows *sql.Rows, target reflect.Value) error {
+	columnNames, err := rows.Columns()
+	if err != nil {
+		return err
+	}
+	fieldsAddrs, err := StructFieldsAddrs(target, Columns2Fields(columnNames))
+	if err != nil {
+		return err
+	}
+	if rows.Next() {
+		if err := rows.Scan(fieldsAddrs...); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ScanSlice(rows *sql.Rows, target, p reflect.Value) error {
+	columnNames, err := rows.Columns()
+	if err != nil {
+		return err
+	}
+	fieldNames := Columns2Fields(columnNames)
+	elemType := target.Type().Elem()
+	for rows.Next() {
+		elemValue := reflect.Zero(elemType)
+		if fieldsAddrs, err := StructFieldsAddrs(elemValue, fieldNames); err != nil {
+			return err
+		} else if err := rows.Scan(fieldsAddrs...); err != nil {
+			return err
+		}
+		target = reflect.Append(target, elemValue)
+	}
+	p.Elem().Set(target)
+	return nil
 }
