@@ -35,10 +35,10 @@ type T3 struct {
 	T3Name string
 }
 
-func TestFieldsFromStruct() {
+func TestFieldsFromStruct(t *testing.T) {
 	got := FieldsFromStruct(T{}, []string{"T2Name"})
-	expect := []string{"name", "T3Name"}
-	if !refelct.DeepEqual(got, expect) {
+	expect := []string{"Name", "T3Name"}
+	if !reflect.DeepEqual(got, expect) {
 		t.Fatalf("unexpected: %v", got)
 	}
 }

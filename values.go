@@ -1,9 +1,9 @@
 package bsql
 
 import (
-	"encoding/json"
-	"iconv"
+	//	"encoding/json"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -32,7 +32,7 @@ func StructValues(data interface{}, fields []string) string {
 func StructValuesIn(value reflect.Value, fields []string) string {
 	var slice []string
 	for _, fieldName := range fields {
-		slice = append(slice, Q(value.FieldByName(fieldName).Interface()))
+		slice = append(slice, V(value.FieldByName(fieldName).Interface()))
 	}
 	return "(" + strings.Join(slice, ",") + ")"
 }
@@ -41,10 +41,26 @@ func V(i interface{}) string {
 	switch v := i.(type) {
 	case string:
 		return Q(v)
-	case int, int8, int16, int32, int64:
-		return strconv.FormatInt(int64(v), 10, 64)
-	case uint, uint8, uint16, uint32, uint64:
-		return strconv.FormatUint(uint64(v), 10, 64)
+	case int:
+		return strconv.FormatInt(int64(v), 10)
+	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case int16:
+		return strconv.FormatInt(int64(v), 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case uint:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		return strconv.FormatUint(v, 10)
 	case bool:
 		if v {
 			return "t"
@@ -58,6 +74,6 @@ func V(i interface{}) string {
 	}:
 		return v.String()
 	default:
-
+		return ""
 	}
 }
