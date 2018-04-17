@@ -1,8 +1,6 @@
 package bsql
 
 import (
-	"errors"
-	"reflect"
 	"strings"
 )
 
