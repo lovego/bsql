@@ -14,10 +14,6 @@ type testScanner struct {
 	i       int
 }
 
-func newTestScanner(columns []string, rows [][]interface{}) *testScanner {
-	return &testScanner{columns: columns, rows: rows, i: -1}
-}
-
 func (s *testScanner) Columns() ([]string, error) {
 	return s.columns, nil
 }
@@ -53,15 +49,10 @@ type testUser struct {
 }
 
 var testTime = time.Now()
-var testUsers = newTestScanner([]string{"id", "user_name", "sex", "created_at"}, [][]interface{}{
-	{1, "李雷", "男", testTime}, {2, "韩梅梅", "女", testTime},
-	{3, "Lili", "女", testTime}, {4, "Lucy", "女", testTime},
-	{5, "Mr Gao", "男", testTime}, {6, "Uncle Wang", "男", testTime},
-})
 
-func TestScanStruct(t *testing.T) {
+func TestScan2Struct(t *testing.T) {
 	var got = testUser{}
-	if err := ScanStruct(testUsers, reflect.ValueOf(&got).Elem()); err != nil {
+	if err := Scan2Struct(testUsers(), reflect.ValueOf(&got).Elem()); err != nil {
 		t.Fatal(err)
 	}
 	expect := testUser{1, "李雷", "男", testTime}
@@ -71,10 +62,10 @@ func TestScanStruct(t *testing.T) {
 	t.Logf("%+v", got)
 }
 
-func TestScanSlice(t *testing.T) {
+func TestScan2Slice(t *testing.T) {
 	var got []testUser
 	v := reflect.ValueOf(&got)
-	if err := ScanSlice(testUsers, v.Elem(), v); err != nil {
+	if err := Scan2Slice(testUsers(), v.Elem(), v); err != nil {
 		t.Fatal(err)
 	}
 	expect := []testUser{
@@ -86,4 +77,16 @@ func TestScanSlice(t *testing.T) {
 		t.Fatalf("unexpected: %+v", got)
 	}
 	t.Logf("%+v", got)
+}
+
+func testUsers() *testScanner {
+	return &testScanner{
+		columns: []string{"id", "user_name", "sex", "created_at"},
+		rows: [][]interface{}{
+			{1, "李雷", "男", testTime}, {2, "韩梅梅", "女", testTime},
+			{3, "Lili", "女", testTime}, {4, "Lucy", "女", testTime},
+			{5, "Mr Gao", "男", testTime}, {6, "Uncle Wang", "男", testTime},
+		},
+		i: -1,
+	}
 }
