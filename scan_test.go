@@ -33,8 +33,8 @@ func (s *testScanner) Scan(dests ...interface{}) error {
 	if len(dests) > len(row) {
 		return fmt.Errorf("sql: expected most %d destination arguments in Scan, got %d", len(row), len(dests))
 	}
-	for i, desc := range dests {
-		reflect.ValueOf(desc).Elem().Set(reflect.ValueOf(row[i]))
+	for i, dest := range dests {
+		reflect.ValueOf(dest).Elem().Set(reflect.ValueOf(row[i]))
 	}
 	return nil
 }
@@ -63,6 +63,19 @@ func TestScan2Struct(t *testing.T) {
 }
 
 func TestScan2Slice(t *testing.T) {
+	var got []int
+	v := reflect.ValueOf(&got)
+	if err := Scan2Slice(testUsers(), v.Elem(), v); err != nil {
+		t.Fatal(err)
+	}
+	expect := []int{1, 2, 3, 4, 5, 6}
+	if !reflect.DeepEqual(got, expect) {
+		t.Fatalf("unexpected: %+v", got)
+	}
+	t.Logf("%+v", got)
+}
+
+func TestScan2StructSlice(t *testing.T) {
 	var got []testUser
 	v := reflect.ValueOf(&got)
 	if err := Scan2Slice(testUsers(), v.Elem(), v); err != nil {

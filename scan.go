@@ -44,7 +44,7 @@ func Scan2Slice(scanner Scanner, target, p reflect.Value) error {
 	}
 	for scanner.Next() {
 		target = reflect.Append(target, reflect.Zero(elemType))
-		if err := scanner.Scan(target.Index(target.Len() - 1).Addr()); err != nil {
+		if err := scanner.Scan(target.Index(target.Len() - 1).Addr().Interface()); err != nil {
 			return err
 		}
 	}
