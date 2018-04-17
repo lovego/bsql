@@ -1,12 +1,18 @@
 package bsql
 
 import (
-	"database/sql"
 	"errors"
 	"reflect"
 )
 
-func Scan(rows *sql.Rows, data interface{}) error {
+type Scanner interface {
+	Columns() ([]string, error)
+	Next() bool
+	Scan(dest ...interface{}) error
+	Err() error
+}
+
+func Scan(scanner Scanner, data interface{}) error {
 	p := reflect.ValueOf(data)
 	if p.Kind() != reflect.Ptr {
 		return errors.New("data must be a pointer.")
@@ -14,25 +20,25 @@ func Scan(rows *sql.Rows, data interface{}) error {
 	target := p.Elem()
 	switch target.Kind() {
 	case reflect.Struct:
-		if err := ScanStruct(rows, target); err != nil {
+		if err := ScanStruct(scanner, target); err != nil {
 			return err
 		}
 	case reflect.Slice:
-		if err := ScanSlice(rows, target, p); err != nil {
+		if err := ScanSlice(scanner, target, p); err != nil {
 			return err
 		}
 	default:
-		if rows.Next() {
-			if err := rows.Scan(p); err != nil {
+		if scanner.Next() {
+			if err := scanner.Scan(p); err != nil {
 				return err
 			}
 		}
 	}
-	return rows.Err()
+	return scanner.Err()
 }
 
-func ScanStruct(rows *sql.Rows, target reflect.Value) error {
-	columnNames, err := rows.Columns()
+func ScanStruct(scanner Scanner, target reflect.Value) error {
+	columnNames, err := scanner.Columns()
 	if err != nil {
 		return err
 	}
@@ -40,26 +46,26 @@ func ScanStruct(rows *sql.Rows, target reflect.Value) error {
 	if err != nil {
 		return err
 	}
-	if rows.Next() {
-		if err := rows.Scan(fieldsAddrs...); err != nil {
+	if scanner.Next() {
+		if err := scanner.Scan(fieldsAddrs...); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func ScanSlice(rows *sql.Rows, target, p reflect.Value) error {
-	columnNames, err := rows.Columns()
+func ScanSlice(scanner Scanner, target, p reflect.Value) error {
+	columnNames, err := scanner.Columns()
 	if err != nil {
 		return err
 	}
 	fieldNames := Columns2Fields(columnNames)
 	elemType := target.Type().Elem()
-	for rows.Next() {
+	for scanner.Next() {
 		elemValue := reflect.Zero(elemType)
 		if fieldsAddrs, err := StructFieldsAddrs(elemValue, fieldNames); err != nil {
 			return err
-		} else if err := rows.Scan(fieldsAddrs...); err != nil {
+		} else if err := scanner.Scan(fieldsAddrs...); err != nil {
 			return err
 		}
 		target = reflect.Append(target, elemValue)
