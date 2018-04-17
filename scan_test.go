@@ -97,12 +97,21 @@ func TestStructFieldsAddrs(t *testing.T) {
 		Name   string
 		Exists bool
 	}
-	addrs, err := StructFieldsAddrs(reflect.ValueOf(&bsqlTest).Elem(), []string{"Id", "Name",
-		"Exists"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(addrs) != 3 {
+	var addrs []interface{}
+	if addrs, err := StructFieldsAddrs(reflect.ValueOf(&bsqlTest).Elem(),
+		[]string{"Id", "Name", "Exists"}); err != nil || len(addrs) != 3 {
 		t.Fatalf("unexpted addrs size: %d", len(addrs))
+	}
+	for i := range addrs {
+		if _, ok := addrs[i].(*int64); ok {
+			continue
+		}
+		if _, ok := addrs[i].(*string); ok {
+			continue
+		}
+		if _, ok := addrs[i].(*bool); ok {
+			continue
+		}
+		t.Fatalf("指针类型错误", addrs[i])
 	}
 }

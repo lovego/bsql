@@ -7,7 +7,7 @@ import (
 
 func TestColumn2Field(t *testing.T) {
 	var data = []string{"bsql_test", "xiao_mei", "love_go", "you123"}
-	var expect = []string{"PsqlTest", "XiaoMei", "LoveGo", "You123"}
+	var expect = []string{"BsqlTest", "XiaoMei", "LoveGo", "You123"}
 	for i := range data {
 		if got := Column2Field(data[i]); !reflect.DeepEqual(expect[i], got) {
 			t.Errorf("expect %v,got %v", expect, got)
@@ -16,8 +16,9 @@ func TestColumn2Field(t *testing.T) {
 }
 
 func TestColumns2Fields(t *testing.T) {
-	var expect = []string{"PsqlTest", "UserName", "Phone"}
-	if got := Columns2Fields([]string{"bsql_test", "user_name", "phone"}); !reflect.DeepEqual(expect, got) {
+	var data = []string{"bsql_test", "user_name", "phone"}
+	var expect = []string{"BsqlTest", "UserName", "Phone"}
+	if got := Columns2Fields(data); !reflect.DeepEqual(expect, got) {
 		t.Errorf("expect %v,got %v", expect, got)
 	}
 }
