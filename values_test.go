@@ -42,6 +42,17 @@ func TestValues(t *testing.T) {
 }
 
 func TestStructValues(t *testing.T) {
+	data := []struct {
+		Id        int
+		Name, Sex string
+	}{
+		{1, "李雷", "男"}, {2, "韩梅梅", "女"},
+		{3, "Lili", "女"}, {4, "Lucy", "女"},
+	}
+	got := StructValues(data, []string{"Id", "Name"})
+	if got != "(1,'李雷'),(2,'韩梅梅'),(3,'Lili'),(4,'Lucy')" {
+		t.Errorf("unexpected: %s", got)
+	}
 }
 
 func TestV(t *testing.T) {
