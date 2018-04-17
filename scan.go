@@ -19,7 +19,7 @@ func Scan(scanner Scanner, data interface{}) error {
 	}
 	target := p.Elem()
 	switch target.Kind() {
-	case reflect.Slice:
+	case reflect.Slice, reflect.Array:
 		if err := Scan2Slice(scanner, target, p); err != nil {
 			return err
 		}
