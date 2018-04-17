@@ -92,26 +92,31 @@ func testUsers() *testScanner {
 }
 
 func TestStructFieldsAddrs(t *testing.T) {
-	var bsqlTest struct {
+	var v struct {
 		Id     int64
 		Name   string
 		Exists bool
 	}
-	var addrs []interface{}
-	if addrs, err := StructFieldsAddrs(reflect.ValueOf(&bsqlTest).Elem(),
-		[]string{"Id", "Name", "Exists"}); err != nil || len(addrs) != 3 {
-		t.Fatalf("unexpted addrs size: %d", len(addrs))
+	addrs, err := StructFieldsAddrs(reflect.ValueOf(&v).Elem(), []string{"Id", "Name", "Exists"})
+	if err != nil {
+		t.Fatal(err)
 	}
-	for i := range addrs {
-		if _, ok := addrs[i].(*int64); ok {
-			continue
-		}
-		if _, ok := addrs[i].(*string); ok {
-			continue
-		}
-		if _, ok := addrs[i].(*bool); ok {
-			continue
-		}
-		t.Fatalf("指针类型错误", addrs[i])
+	if len(addrs) != 3 {
+		t.Fatalf("unexpected addrs size: %d", len(addrs))
+	}
+	if p, ok := addrs[0].(*int64); !ok {
+		t.Errorf("unexpected type: %T", addrs[0])
+	} else if p != &v.Id {
+		t.Errorf("unexpected addr: %p, expect: %p", p, &v.Id)
+	}
+	if p, ok := addrs[1].(*string); !ok {
+		t.Errorf("unexpected type: %T", addrs[1])
+	} else if p != &v.Name {
+		t.Errorf("unexpected addr: %p, expect: %p", p, &v.Name)
+	}
+	if p, ok := addrs[2].(*bool); !ok {
+		t.Errorf("unexpected type: %T", addrs[2])
+	} else if p != &v.Exists {
+		t.Errorf("unexpected addr: %p, expect: %p", p, &v.Exists)
 	}
 }
