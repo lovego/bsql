@@ -2,7 +2,6 @@ package bsql
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 )
@@ -30,7 +29,6 @@ func StructFieldsAddrs(structValue reflect.Value, fieldNames []string) ([]interf
 	var result []interface{}
 	for _, fieldName := range fieldNames {
 		if field := structValue.FieldByName(fieldName); field.IsValid() {
-			fmt.Println("测试", field)
 			result = append(result, field.Addr().Interface())
 		} else {
 			return nil, errors.New("no field: '" + fieldName + "' in struct.")
