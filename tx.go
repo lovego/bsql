@@ -13,16 +13,16 @@ type Tx struct {
 
 func (tx *Tx) Query(data interface{}, sql string, args ...interface{}) error {
 	if tx.Timeout > 0 {
-		return tx.QueryT(tx.Timeout, data, sql, args)
+		return tx.QueryT(tx.Timeout, data, sql, args...)
 	} else {
-		return tx.QueryT(time.Minute, data, sql, args)
+		return tx.QueryT(time.Minute, data, sql, args...)
 	}
 }
 
 func (tx *Tx) QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
-	rows, err := tx.Tx.QueryContext(ctx, sql, args)
+	rows, err := tx.Tx.QueryContext(ctx, sql, args...)
 	if rows != nil {
 		defer rows.Close()
 	}
