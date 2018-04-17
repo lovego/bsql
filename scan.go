@@ -20,11 +20,11 @@ func Scan(scanner Scanner, data interface{}) error {
 	target := p.Elem()
 	switch target.Kind() {
 	case reflect.Struct:
-		if err := ScanStruct(scanner, target); err != nil {
+		if err := Scan2Struct(scanner, target); err != nil {
 			return err
 		}
 	case reflect.Slice:
-		if err := ScanSlice(scanner, target, p); err != nil {
+		if err := Scan2Slice(scanner, target, p); err != nil {
 			return err
 		}
 	default:
@@ -37,7 +37,7 @@ func Scan(scanner Scanner, data interface{}) error {
 	return scanner.Err()
 }
 
-func ScanStruct(scanner Scanner, target reflect.Value) error {
+func Scan2Struct(scanner Scanner, target reflect.Value) error {
 	columnNames, err := scanner.Columns()
 	if err != nil {
 		return err
@@ -54,7 +54,7 @@ func ScanStruct(scanner Scanner, target reflect.Value) error {
 	return nil
 }
 
-func ScanSlice(scanner Scanner, target, p reflect.Value) error {
+func Scan2Slice(scanner Scanner, target, p reflect.Value) error {
 	columnNames, err := scanner.Columns()
 	if err != nil {
 		return err
@@ -62,13 +62,14 @@ func ScanSlice(scanner Scanner, target, p reflect.Value) error {
 	fieldNames := Columns2Fields(columnNames)
 	elemType := target.Type().Elem()
 	for scanner.Next() {
-		elemValue := reflect.Zero(elemType)
-		if fieldsAddrs, err := StructFieldsAddrs(elemValue, fieldNames); err != nil {
-			return err
-		} else if err := scanner.Scan(fieldsAddrs...); err != nil {
+		target = reflect.Append(target, reflect.Zero(elemType))
+		fieldsAddrs, err := StructFieldsAddrs(target.Index(target.Len()-1), fieldNames)
+		if err != nil {
 			return err
 		}
-		target = reflect.Append(target, elemValue)
+		if err := scanner.Scan(fieldsAddrs...); err != nil {
+			return err
+		}
 	}
 	p.Elem().Set(target)
 	return nil
