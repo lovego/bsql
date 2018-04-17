@@ -11,13 +11,17 @@ import (
 
 var testDb *DB
 
+type Info struct {
+	Account string
+	Name    string
+}
+
 type User struct {
 	Id        int64
 	Phone     string
-	Account   string
-	Name      string
 	Status    int8
 	CreatedAt time.Time
+	Info
 }
 
 type Staffs struct {
