@@ -31,28 +31,3 @@ func TestColumn2Fields(t *testing.T) {
 		t.Errorf("expect %v,got %v", expect, got)
 	}
 }
-
-func TestStructFieldsAddrs(t *testing.T) {
-	var bsqlTest struct {
-		Id     int64
-		Name   string
-		Exists bool
-	}
-	var addrs []interface{}
-	if addrs, err := StructFieldsAddrs(reflect.ValueOf(&bsqlTest).Elem(),
-		[]string{"Id", "Name", "Exists"}); err != nil || len(addrs) != 3 {
-		t.Fatalf("unexpted addrs size: %d", len(addrs))
-	}
-	for i := range addrs {
-		if _, ok := addrs[i].(*int64); ok {
-			continue
-		}
-		if _, ok := addrs[i].(*string); ok {
-			continue
-		}
-		if _, ok := addrs[i].(*bool); ok {
-			continue
-		}
-		t.Fatalf("指针类型错误", addrs[i])
-	}
-}
