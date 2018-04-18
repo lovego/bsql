@@ -36,11 +36,12 @@ func Columns2Fields(columns []string) (result []string) {
 	return result
 }
 
-func Fields2Columns(fields []string) (result []string) {
+func Fields2Columns(fields []string) string {
+	var result []string
 	for _, field := range fields {
 		result = append(result, Field2Column(field))
 	}
-	return result
+	return strings.Join(result, ",")
 }
 
 func FieldsFromStruct(v interface{}, exclude []string) (result []string) {

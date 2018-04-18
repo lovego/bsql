@@ -10,6 +10,12 @@ type DB struct {
 	*sql.DB
 	Timeout time.Duration
 }
+type DbOrTx interface {
+	Query(data interface{}, sql string, args ...interface{}) error
+	QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error
+	Exec(sql string, args ...interface{}) (sql.Result, error)
+	ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error)
+}
 
 func (db *DB) Query(data interface{}, sql string, args ...interface{}) error {
 	if db.Timeout > 0 {

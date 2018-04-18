@@ -112,20 +112,29 @@ func V(i interface{}) string {
 	case time.Time:
 		return "'" + v.Format(time.RFC3339Nano) + "'"
 	case driver.Valuer:
-		ifc, err := v.Value()
-		if err != nil {
-			log.Panic("bsql json.Marshal: ", err)
-		}
-		if s, ok := ifc.(string); ok {
-			return s
-		} else {
-			return V(ifc)
-		}
+		return valuer(v)
 	default:
 		buf, err := json.Marshal(v)
 		if err != nil {
 			log.Panic("bsql json.Marshal: ", err)
 		}
 		return Q(string(buf))
+	}
+}
+
+func valuer(v driver.Valuer) string {
+	ifc, err := v.Value()
+	if err != nil {
+		log.Panic("bsql valuer: ", err)
+	}
+	switch s := ifc.(type) {
+	case string:
+		if _, err := strconv.ParseFloat(s, 64); err == nil {
+			return s
+		} else {
+			return Q(s)
+		}
+	default:
+		return V(ifc)
 	}
 }
