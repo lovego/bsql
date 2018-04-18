@@ -14,13 +14,19 @@ func Column2Field(column string) string {
 	return strings.Join(parts, "")
 }
 
-var fieldToColumnRe1 = regexp.MustCompile("(.)([A-Z][a-z]+)")
-var fieldToColumnRe2 = regexp.MustCompile("([a-z0-9])([A-Z])")
+var camel = regexp.MustCompile("(^[^A-Z0-9]*|[A-Z0-9]*)([A-Z0-9][^A-Z]+|$)")
 
-func Field2Column(field string) string {
-	field = fieldToColumnRe1.ReplaceAllString(field, "$1_$2")
-	field = fieldToColumnRe2.ReplaceAllString(field, "$1_$2")
-	return strings.ToLower(field)
+func Field2Column(s string) string {
+	var a []string
+	for _, sub := range camel.FindAllStringSubmatch(s, -1) {
+		if sub[1] != "" {
+			a = append(a, sub[1])
+		}
+		if sub[2] != "" {
+			a = append(a, sub[2])
+		}
+	}
+	return strings.ToLower(strings.Join(a, "_"))
 }
 
 func Columns2Fields(columns []string) (result []string) {

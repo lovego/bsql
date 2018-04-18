@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strconv"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -56,68 +57,65 @@ type timeFields struct {
 
 func testStudents() []Student {
 	rows := []Student{{
-		Id: 1, Name: "李雷", FriendIds: []int{2}, Cities: []string{"成都", "北京"},
-		Scores: `{"语文": 95, "英语": 97}`,
+		Id: 1, Name: "李雷", FriendIds: []int64{2}, Cities: []string{"成都", "北京"},
+		Scores: map[string]int{"语文": 95, "英语": 97},
 	}, {
-		Id: 2, Name: "韩梅梅", FriendIds: []int{1, 3}, Cities: []string{"成都", "深圳"},
-		Scores: `{"语文": 97, "英语": 97}`,
+		Id: 2, Name: "韩梅梅", FriendIds: []int64{1, 3}, Cities: []string{"成都", "深圳"},
+		Scores: map[string]int{"语文": 97, "英语": 97},
 	}, {
-		Id: 3, Name: "Tom", FriendIds: []int{2}, Cities: []string{"成都", "NewYork"},
-		Scores: `{"语文": 80, "英语": 91}`,
+		Id: 3, Name: "Tom", FriendIds: []int64{2}, Cities: []string{"成都", "NewYork"},
+		Scores: map[string]int{"语文": 80, "英语": 91},
 	}}
-	for _, row := range rows {
-		row.Money = decimal.New(1234, -2)
-		row.status = 1
-		row.CreatedAt = time.Now()
+	for i := range rows {
+		rows[i].Money = decimal.New(1234, -2)
+		rows[i].Status = 1
+		rows[i].CreatedAt = time.Now().Round(time.Millisecond)
 	}
 	return rows
 }
 
 func TestDB(t *testing.T) {
 	var fields = FieldsFromStruct(Student{}, []string{"Id", "UpdatedAt"})
-	var columns = Fields2Columns(fields)
+	var columns = strings.Join(Fields2Columns(fields), ",")
 
-	if _, err := testDb.Exec(`insert into users (
-  ) values
-	returning *
-	 `); err != nil {
-		log.Panic(err)
-	}
-
-	var user Student
-	if err := testDb.Query(&user, `select * from users where id = $1`, 1); err != nil {
+	var expect = testStudents()
+	var got []Student
+	sql := fmt.Sprintf(
+		`insert into students (%s) values %s returning *`, columns, StructValues(expect, fields),
+	)
+	if err := testDb.Query(got, sql); err != nil {
+		t.Log(sql)
 		t.Fatal(err)
 	}
-	if user.Phone != `18380461681` {
-		t.Logf("unexpected phone: %v", user.Phone)
+	if !reflect.DeepEqual(got, expect) {
+		t.Fatalf("exptced: %v", got)
+	} else {
+		t.Log(got)
+	}
+
+	var student Student
+	if err := testDb.Query(&student, `select * from students where id=$1`, 1); err != nil {
+		t.Fatal(err)
 	}
 
 	var area = map[string]bool{"成都": true}
-	var query = fmt.Sprintf(`select * from users where areas @> %v`, V(area))
+	var query = fmt.Sprintf(`select * from students where areas @> %v`, V(area))
 	t.Log(query)
-	if err := testDb.Query(&users, query); err != nil {
+	var students []Student
+	if err := testDb.Query(&students, query); err != nil {
 		t.Fatal(err)
 	}
-	for _, u := range users {
-		if u.Phone != `1838046168`+strconv.FormatInt(u.Id, 10) {
-			t.Logf("unexpected phone: %v", u.Phone)
-		}
-	}
-}
 
-func TestExec(t *testing.T) {
-	if _, err := testDb.Exec(`update users set phone = '18380461689' where id = $1`, 1); err != nil {
+	if _, err := testDb.Exec(`update students set phone = '18380461689' where id = $1`, 1); err != nil {
 		t.Fatal(err)
 	}
 	var user Student
-	if err := testDb.Query(&user, `select phone from users where id = $1`, 1); err != nil {
+	if err := testDb.Query(&user, `select phone from students where id = $1`, 1); err != nil {
 		t.Fatal(err)
 	}
-	if user.Phone != `18380461689` {
-		t.Logf("unexpected phone: %v", user.Phone)
-	}
+
 	var ids []int64
-	if err := testDb.Query(&ids, `update users set name = '杰克' returning id`); err != nil {
+	if err := testDb.Query(&ids, `update students set name = '杰克' returning id`); err != nil {
 		t.Fatal(err)
 	}
 	if len(ids) != 3 {

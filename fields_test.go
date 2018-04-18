@@ -22,8 +22,8 @@ func TestField2Column(t *testing.T) {
 	var inputs = []string{"XiaoMei", "HTTPStatus", "You123"}
 	var expect = []string{"xiao_mei", "http_status", "you123"}
 	for i := range inputs {
-		if got := Field2Column(inputs[i]); !reflect.DeepEqual(expect[i], got) {
-			t.Errorf("expect: %v, got: %v", expect, got)
+		if got := Field2Column(inputs[i]); expect[i] != got {
+			t.Errorf("expect: %v, got: %v", expect[i], got)
 		}
 	}
 	if got := Fields2Columns(inputs); !reflect.DeepEqual(expect, got) {

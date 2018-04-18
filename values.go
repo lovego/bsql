@@ -110,7 +110,7 @@ func V(i interface{}) string {
 	case []byte:
 		return string(v)
 	case time.Time:
-		return v.Format(time.RFC3339Nano)
+		return "'" + v.Format(time.RFC3339Nano) + "'"
 	case driver.Valuer:
 		ifc, err := v.Value()
 		if err != nil {
