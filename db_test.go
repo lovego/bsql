@@ -3,6 +3,7 @@ package bsql
 import (
 	"database/sql"
 	"log"
+	"reflect"
 	"testing"
 	"time"
 
@@ -68,6 +69,30 @@ func TestDB(t *testing.T) {
 	db := getTestDB()
 	defer db.Close()
 	runTests(t, db)
+}
+
+func TestScanArray(t *testing.T) {
+	db := getTestDB()
+	defer db.Close()
+	var ints struct {
+		Slice pq.Int64Array
+	}
+	if err := db.Query(&ints, `select '{1,2,3}'::int[] as slice`); err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(ints.Slice, pq.Int64Array([]int64{1, 2, 3})) {
+		t.Errorf("unexpected: %v", ints.Slice)
+	}
+
+	var strs struct {
+		Slice []string
+	}
+	if err := db.Query(&strs, `select '{"abc","de''f"}'::text[] as slice`); err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(strs.Slice, []string{"abc", "de'f"}) {
+		t.Errorf("unexpected: %v", strs.Slice)
+	}
 }
 
 func getTestDB() *DB {

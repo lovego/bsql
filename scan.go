@@ -104,10 +104,12 @@ func scannerOf(addrValue reflect.Value, column columnType) interface{} {
 	switch dbType {
 	case "JSONB", "JSON":
 		return jsonScanner{addr}
-	case "ARRAY":
-		return pq.Array(addr)
 	default:
-		return addr
+		if len(dbType) > 0 && dbType[0] == '_' {
+			return pq.Array(addr)
+		} else {
+			return addr
+		}
 	}
 }
 

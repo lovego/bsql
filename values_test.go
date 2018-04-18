@@ -42,25 +42,17 @@ func TestValues(t *testing.T) {
 }
 
 func TestArray(t *testing.T) {
-	if got := Array(3); got != "{3}" {
+	if got := Array([]int{1, 2, 3}); got != "'{1,2,3}'" {
 		t.Errorf("unexpected: %s", got)
 	}
 
-	if got := Array("a'bc"); got != "{'a''bc'}" {
-		t.Errorf("unexpected: %s", got)
-	}
-
-	if got := Array([]int{1, 2, 3}); got != "{1,2,3}" {
-		t.Errorf("unexpected: %s", got)
-	}
-
-	if got := Array([]string{"a", "b", "c"}); got != "{'a','b','c'}" {
+	if got := Array([]string{"a", "b", "c"}); got != `'{"a","b","c"}'` {
 		t.Errorf("unexpected: %s", got)
 	}
 
 	if got := Array([][]interface{}{
 		{1, "a", true}, {2, "b", true}, {3, "c", false},
-	}); got != `{'[1,"a",true]','[2,"b",true]','[3,"c",false]'}` {
+	}); got != `'{{1,"a",true},{2,"b",true},{3,"c",false}}'` {
 		t.Errorf("unexpected: %s", got)
 	}
 }

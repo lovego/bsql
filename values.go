@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 // Quote string
@@ -35,13 +37,11 @@ func Values(data interface{}) string {
 }
 
 func Array(data interface{}) string {
-	value := reflect.ValueOf(data)
-	switch value.Kind() {
-	case reflect.Slice, reflect.Array:
-		return "{" + SliceContents(value) + "}"
-	default:
-		return "{" + V(value.Interface()) + "}"
+	v, err := pq.Array(data).Value()
+	if err != nil {
+		log.Panic("bsql Array: ", err)
 	}
+	return "'" + v.(string) + "'"
 }
 
 func SliceContents(value reflect.Value) string {
@@ -132,7 +132,7 @@ func valuer(v driver.Valuer) string {
 		if _, err := strconv.ParseFloat(s, 64); err == nil {
 			return s
 		} else {
-			return Q(s)
+			return "'" + s + "'"
 		}
 	default:
 		return V(ifc)
