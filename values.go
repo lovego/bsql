@@ -103,9 +103,9 @@ func V(i interface{}) string {
 		return strconv.FormatUint(v, 10)
 	case bool:
 		if v {
-			return "t"
+			return "true"
 		} else {
-			return "f"
+			return "false"
 		}
 	case []byte:
 		return string(v)
