@@ -40,14 +40,16 @@ func init() {
 	}
 	testDb = &DB{db, time.Minute}
 
-	if _, err := db.Exec(`create table  if not exists users(
+	if _, err := db.Exec(`
+	drop table if exists users;
+	create table if not exists users (
 		id bigint, phone varchar(50), account varchar(100), name varchar(50), status smallint,
 		created_at date, areas jsonb
 	)`); err != nil {
 		log.Panic(err)
 	}
 
-	if _, err := db.Exec(`create table if not exists staffs(
+	if _, err := db.Exec(`create table if not exists staffs (
 		id bigint, company_id bigint, staff_id bigint, staff_name varchar(50)
 	)`); err != nil {
 		log.Panic(err)

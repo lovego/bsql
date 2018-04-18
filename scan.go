@@ -1,37 +1,48 @@
 package bsql
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
 )
 
-type Rows interface {
+type rowsType interface {
+	ColumnTypes() ([]*sql.ColumnType, error)
 	Columns() ([]string, error)
 	Next() bool
 	Scan(dest ...interface{}) error
 	Err() error
 }
 
-func Scan(rows Rows, data interface{}) error {
+func scan(rows rowsType, data interface{}) error {
 	p := reflect.ValueOf(data)
 	if p.Kind() != reflect.Ptr {
 		return errors.New("data must be a pointer.")
 	}
+	columns, err := getColumns(rows)
+	if err != nil {
+		return err
+	}
+	if len(columns) == 0 {
+		return errors.New("no columns.")
+	}
 	target := p.Elem()
 	switch target.Kind() {
 	case reflect.Slice, reflect.Array:
-		if err := Scan2Slice(rows, target, p); err != nil {
+		if err := scan2Slice(rows, columns, target, p); err != nil {
 			return err
 		}
 	case reflect.Struct:
-		if err := Scan2Struct(rows, target); err != nil {
-			return err
+		if rows.Next() {
+			if err := scan2Struct(rows, columns, target); err != nil {
+				return err
+			}
 		}
 	default:
 		if rows.Next() {
-			if err := rows.Scan(p); err != nil {
+			if err := rows.Scan(scannerOf(p, columns[0])); err != nil {
 				return err
 			}
 		}
@@ -39,90 +50,71 @@ func Scan(rows Rows, data interface{}) error {
 	return rows.Err()
 }
 
-func Scan2Slice(rows Rows, target, p reflect.Value) error {
-	elemType := target.Type().Elem()
-	if elemType.Kind() == reflect.Struct {
-		return Scan2StructSlice(rows, target, p)
-	}
+func scan2Slice(rows rowsType, columns []columnType, targets, p reflect.Value) error {
+	elemType := targets.Type().Elem()
 	for rows.Next() {
-		target = reflect.Append(target, reflect.Zero(elemType))
-		if err := rows.Scan(target.Index(target.Len() - 1).Addr().Interface()); err != nil {
+		targets = reflect.Append(targets, reflect.Zero(elemType))
+		target := targets.Index(targets.Len() - 1)
+		if elemType.Kind() == reflect.Struct {
+			if err := scan2Struct(rows, columns, target); err != nil {
+				return err
+			}
+		} else if err := rows.Scan(scannerOf(target.Addr(), columns[0])); err != nil {
 			return err
 		}
 	}
-	p.Elem().Set(target)
-	return nil
-}
-func Scan2StructSlice(rows Rows, target, p reflect.Value) error {
-	columnNames, err := rows.Columns()
-	if err != nil {
-		return err
-	}
-	fieldNames := Columns2Fields(columnNames)
-	elemType := target.Type().Elem()
-	for rows.Next() {
-		target = reflect.Append(target, reflect.Zero(elemType))
-		fieldsAddrs, err := StructFieldsScanners(target.Index(target.Len()-1), fieldNames)
-		if err != nil {
-			return err
-		}
-		if err := rows.Scan(fieldsAddrs...); err != nil {
-			return err
-		}
-	}
-	p.Elem().Set(target)
+	p.Elem().Set(targets)
 	return nil
 }
 
-func Scan2Struct(rows Rows, target reflect.Value) error {
-	columnNames, err := rows.Columns()
+func scan2Struct(rows rowsType, columns []columnType, target reflect.Value) error {
+	scanners, err := structFieldsScanners(target, columns)
 	if err != nil {
 		return err
 	}
-	fieldsAddrs, err := StructFieldsScanners(target, Columns2Fields(columnNames))
-	if err != nil {
+	if err := rows.Scan(scanners...); err != nil {
 		return err
-	}
-	if rows.Next() {
-		if err := rows.Scan(fieldsAddrs...); err != nil {
-			return err
-		}
 	}
 	return nil
 }
 
-func StructFieldsScanners(structValue reflect.Value, fieldNames []string) ([]interface{}, error) {
+func structFieldsScanners(structValue reflect.Value, columns []columnType) ([]interface{}, error) {
 	var result []interface{}
-	for _, fieldName := range fieldNames {
-		field := structValue.FieldByName(fieldName)
+	for _, column := range columns {
+		field := structValue.FieldByName(column.FieldName)
 		if !field.IsValid() {
-			return nil, errors.New("no field: '" + fieldName + "' in struct.")
+			return nil, errors.New("no field: '" + column.FieldName + "' in struct.")
 		}
-		result = append(result, scannerOf(field))
+		result = append(result, scannerOf(field.Addr(), column))
 	}
 	return result, nil
 }
 
-func scannerOf(value reflect.Value) interface{} {
-	switch value.Kind() {
-	case reflect.Slice, reflect.Array, reflect.Map, reflect.Struct:
-		return jsonScanner{value.Addr().Interface()}
+func scannerOf(addr reflect.Value, column columnType) interface{} {
+	var dbType string
+	if column.ColumnType != nil {
+		dbType = column.ColumnType.DatabaseTypeName()
+	}
+	switch dbType {
+	case "JSONB", "JSON":
+		return jsonScanner{addr.Interface()}
+	// case "ARRAY":
 	default:
-		return value.Addr().Interface()
+		return addr.Interface()
 	}
 }
 
 type jsonScanner struct {
-	p interface{}
+	data interface{}
 }
 
-func (js jsonScanner) Scan(src interface{}) error {
+func (s jsonScanner) Scan(src interface{}) error {
 	switch buf := src.(type) {
 	case string:
-		return json.Unmarshal([]byte(buf), js.p)
+		return json.Unmarshal([]byte(buf), s.data)
 	case []byte:
-		return json.Unmarshal(buf, js.p)
+		return json.Unmarshal(buf, s.data)
 	default:
-		return fmt.Errorf("bsql unexpected: %T %v", src, src)
+		return fmt.Errorf("bsql jsonScanner unexpected: %T %v", src, src)
 	}
 }

@@ -1,46 +1,10 @@
 package bsql
 
 import (
-	"errors"
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
 )
-
-type testRows struct {
-	columns []string
-	rows    [][]interface{}
-	i       int
-}
-
-func (s *testRows) Columns() ([]string, error) {
-	return s.columns, nil
-}
-func (s *testRows) Next() bool {
-	if s.i < 0 {
-		s.i = 0
-	} else {
-		s.i++
-	}
-	return s.i < len(s.rows)
-}
-func (s *testRows) Scan(dests ...interface{}) error {
-	if s.i >= len(s.rows) {
-		return errors.New("all data has been scanned.")
-	}
-	row := s.rows[s.i]
-	if len(dests) > len(row) {
-		return fmt.Errorf("sql: expected most %d destination arguments in Scan, got %d", len(row), len(dests))
-	}
-	for i, dest := range dests {
-		reflect.ValueOf(dest).Elem().Set(reflect.ValueOf(row[i]))
-	}
-	return nil
-}
-func (s *testRows) Err() error {
-	return nil
-}
 
 type testUser struct {
 	Id            int
@@ -50,13 +14,17 @@ type testUser struct {
 
 var testTime = time.Now()
 
-func TestScan2Struct(t *testing.T) {
-	var got = testUser{}
-	if err := Scan2Struct(testUsers(), reflect.ValueOf(&got).Elem()); err != nil {
+func TestScan2StructSlice(t *testing.T) {
+	var got []testUser
+	if err := scan(testUsers(), &got); err != nil {
 		t.Fatal(err)
 	}
-	expect := testUser{1, "李雷", "男", testTime}
-	if got != expect {
+	expect := []testUser{
+		{1, "李雷", "男", testTime}, {2, "韩梅梅", "女", testTime},
+		{3, "Lili", "女", testTime}, {4, "Lucy", "女", testTime},
+		{5, "Mr Gao", "男", testTime}, {6, "Uncle Wang", "男", testTime},
+	}
+	if !reflect.DeepEqual(got, expect) {
 		t.Fatalf("unexpected: %+v", got)
 	}
 	t.Logf("%+v", got)
@@ -64,8 +32,7 @@ func TestScan2Struct(t *testing.T) {
 
 func TestScan2Slice(t *testing.T) {
 	var got []int
-	v := reflect.ValueOf(&got)
-	if err := Scan2Slice(testUsers(), v.Elem(), v); err != nil {
+	if err := scan(testUsers(), &got); err != nil {
 		t.Fatal(err)
 	}
 	expect := []int{1, 2, 3, 4, 5, 6}
@@ -75,18 +42,24 @@ func TestScan2Slice(t *testing.T) {
 	t.Logf("%+v", got)
 }
 
-func TestScan2StructSlice(t *testing.T) {
-	var got []testUser
-	v := reflect.ValueOf(&got)
-	if err := Scan2Slice(testUsers(), v.Elem(), v); err != nil {
+func TestScan2Struct(t *testing.T) {
+	var got = testUser{}
+	if err := scan(testUsers(), &got); err != nil {
 		t.Fatal(err)
 	}
-	expect := []testUser{
-		{1, "李雷", "男", testTime}, {2, "韩梅梅", "女", testTime},
-		{3, "Lili", "女", testTime}, {4, "Lucy", "女", testTime},
-		{5, "Mr Gao", "男", testTime}, {6, "Uncle Wang", "男", testTime},
+	expect := testUser{1, "李雷", "男", testTime}
+	if got != expect {
+		t.Fatalf("unexpected: %+v", got)
 	}
-	if !reflect.DeepEqual(got, expect) {
+	t.Logf("%+v", got)
+}
+
+func TestScan2Int(t *testing.T) {
+	var got int
+	if err := scan(testUsers(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got != 1 {
 		t.Fatalf("unexpected: %+v", got)
 	}
 	t.Logf("%+v", got)
@@ -110,7 +83,9 @@ func TestStructFieldsScanners(t *testing.T) {
 		Name   string
 		Exists bool
 	}
-	addrs, err := StructFieldsScanners(reflect.ValueOf(&v).Elem(), []string{"Id", "Name", "Exists"})
+	addrs, err := structFieldsScanners(reflect.ValueOf(&v).Elem(), []columnType{
+		{FieldName: "Id"}, {FieldName: "Name"}, {FieldName: "Exists"},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -29,7 +29,7 @@ func (db *DB) QueryT(duration time.Duration, data interface{}, sql string, args 
 	if err != nil {
 		return err
 	}
-	return Scan(rows, data)
+	return scan(rows, data)
 }
 
 func (db *DB) Exec(sql string, args ...interface{}) (sql.Result, error) {
