@@ -3,70 +3,88 @@ package bsql
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/lib/pq"
 	"log"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/lib/pq"
+	"github.com/shopspring/decimal"
 )
 
 var testDb *DB
-
-type Info struct {
-	Account string
-	Name    string
-	Areas   map[string]bool
-}
-
-type User struct {
-	Id        int64
-	Phone     string
-	Status    int8
-	CreatedAt time.Time
-	Info
-}
-
-type Staffs struct {
-	Id        int64
-	CompanyId int64
-	StaffId   int64
-	StaffName string
-}
 
 func init() {
 	db, err := sql.Open("postgres", "postgres://develop:@localhost/bsql_test?sslmode=disable")
 	if err != nil {
 		log.Panic(err)
 	}
-	testDb = &DB{db, time.Minute}
+	testDb = &DB{db, time.Second}
 
-	if _, err := db.Exec(`
-	drop table if exists users;
-	create table if not exists users (
-		id bigint, phone varchar(50), account varchar(100), name varchar(50), status smallint,
-		created_at date, areas jsonb
+	if _, err := testDb.Exec(`
+	drop table if exists students;
+	create table if not exists students (
+		id         bigint,
+		name       varchar(50),
+		friend_ids bigint[],
+		cities     varchar[],
+		scores     jsonb,
+		money      decimal,
+		status     smallint,
+		created_at timestamptz,
+		updated_at timestamptz default '0001-01-01Z'
 	)`); err != nil {
-		log.Panic(err)
-	}
-
-	if _, err := db.Exec(`create table if not exists staffs (
-		id bigint, company_id bigint, staff_id bigint, staff_name varchar(50)
-	)`); err != nil {
-		log.Panic(err)
-	}
-	if _, err := db.Exec(`truncate users`); err != nil {
-		log.Panic(err)
-	}
-	if _, err := db.Exec(`insert into users(id,phone,account,name,status,created_at,areas) values
-	 (1,'18380461681','jack111','jack1',0,now(),'{"成都":true}'),
-	 (2,'18380461682','jack222','jack2',0,now(),'{"成都":true}'),
-	 (3,'18380461683','jack333','jack3',0,now(),'{"成都":true}')`); err != nil {
 		log.Panic(err)
 	}
 }
 
-func TestQuery(t *testing.T) {
-	var user User
+type Student struct {
+	Id        int64
+	Name      string
+	FriendIds pq.Int64Array
+	Cities    []string
+	Scores    map[string]int
+	Money     decimal.Decimal
+	Status    int8
+	timeFields
+}
+
+type timeFields struct {
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func testStudents() []Student {
+	rows := []Student{{
+		Id: 1, Name: "李雷", FriendIds: []int{2}, Cities: []string{"成都", "北京"},
+		Scores: `{"语文": 95, "英语": 97}`,
+	}, {
+		Id: 2, Name: "韩梅梅", FriendIds: []int{1, 3}, Cities: []string{"成都", "深圳"},
+		Scores: `{"语文": 97, "英语": 97}`,
+	}, {
+		Id: 3, Name: "Tom", FriendIds: []int{2}, Cities: []string{"成都", "NewYork"},
+		Scores: `{"语文": 80, "英语": 91}`,
+	}}
+	for _, row := range rows {
+		row.Money = decimal.New(1234, -2)
+		row.status = 1
+		row.CreatedAt = time.Now()
+	}
+	return rows
+}
+
+func TestDB(t *testing.T) {
+	var fields = FieldsFromStruct(Student{}, []string{"Id", "UpdatedAt"})
+	var columns = Fields2Columns(fields)
+
+	if _, err := testDb.Exec(`insert into users (
+  ) values
+	returning *
+	 `); err != nil {
+		log.Panic(err)
+	}
+
+	var user Student
 	if err := testDb.Query(&user, `select * from users where id = $1`, 1); err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +92,6 @@ func TestQuery(t *testing.T) {
 		t.Logf("unexpected phone: %v", user.Phone)
 	}
 
-	var users []User
 	var area = map[string]bool{"成都": true}
 	var query = fmt.Sprintf(`select * from users where areas @> %v`, V(area))
 	t.Log(query)
@@ -92,7 +109,7 @@ func TestExec(t *testing.T) {
 	if _, err := testDb.Exec(`update users set phone = '18380461689' where id = $1`, 1); err != nil {
 		t.Fatal(err)
 	}
-	var user User
+	var user Student
 	if err := testDb.Query(&user, `select phone from users where id = $1`, 1); err != nil {
 		t.Fatal(err)
 	}

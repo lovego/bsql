@@ -2,15 +2,9 @@ package bsql
 
 import (
 	"reflect"
+	"regexp"
 	"strings"
 )
-
-func Columns2Fields(columns []string) (result []string) {
-	for _, column := range columns {
-		result = append(result, Column2Field(column))
-	}
-	return result
-}
 
 func Column2Field(column string) string {
 	var parts []string
@@ -20,8 +14,27 @@ func Column2Field(column string) string {
 	return strings.Join(parts, "")
 }
 
+var fieldToColumnRe1 = regexp.MustCompile("(.)([A-Z][a-z]+)")
+var fieldToColumnRe2 = regexp.MustCompile("([a-z0-9])([A-Z])")
+
 func Field2Column(field string) string {
-	return ""
+	field = fieldToColumnRe1.ReplaceAllString(field, "$1_$2")
+	field = fieldToColumnRe2.ReplaceAllString(field, "$1_$2")
+	return strings.ToLower(field)
+}
+
+func Columns2Fields(columns []string) (result []string) {
+	for _, column := range columns {
+		result = append(result, Column2Field(column))
+	}
+	return result
+}
+
+func Fields2Columns(fields []string) (result []string) {
+	for _, field := range fields {
+		result = append(result, Field2Column(field))
+	}
+	return result
 }
 
 func FieldsFromStruct(v interface{}, exclude []string) (result []string) {

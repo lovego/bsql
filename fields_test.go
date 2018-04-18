@@ -6,20 +6,28 @@ import (
 )
 
 func TestColumn2Field(t *testing.T) {
-	var data = []string{"bsql_test", "xiao_mei", "love_go", "you123"}
-	var expect = []string{"BsqlTest", "XiaoMei", "LoveGo", "You123"}
-	for i := range data {
-		if got := Column2Field(data[i]); !reflect.DeepEqual(expect[i], got) {
-			t.Errorf("expect %v,got %v", expect, got)
+	var inputs = []string{"xiao_mei", "http_status", "you123"}
+	var expect = []string{"XiaoMei", "HttpStatus", "You123"}
+	for i := range inputs {
+		if got := Column2Field(inputs[i]); !reflect.DeepEqual(expect[i], got) {
+			t.Errorf("expect: %v, got: %v", expect, got)
 		}
+	}
+	if got := Columns2Fields(inputs); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect: %v, got: %v", expect, got)
 	}
 }
 
-func TestColumns2Fields(t *testing.T) {
-	var data = []string{"bsql_test", "user_name", "phone"}
-	var expect = []string{"BsqlTest", "UserName", "Phone"}
-	if got := Columns2Fields(data); !reflect.DeepEqual(expect, got) {
-		t.Errorf("expect %v,got %v", expect, got)
+func TestField2Column(t *testing.T) {
+	var inputs = []string{"XiaoMei", "HTTPStatus", "You123"}
+	var expect = []string{"xiao_mei", "http_status", "you123"}
+	for i := range inputs {
+		if got := Field2Column(inputs[i]); !reflect.DeepEqual(expect[i], got) {
+			t.Errorf("expect: %v, got: %v", expect, got)
+		}
+	}
+	if got := Fields2Columns(inputs); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect: %v, got: %v", expect, got)
 	}
 }
 
