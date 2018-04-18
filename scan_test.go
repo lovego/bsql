@@ -8,16 +8,16 @@ import (
 	"time"
 )
 
-type testScanner struct {
+type testRows struct {
 	columns []string
 	rows    [][]interface{}
 	i       int
 }
 
-func (s *testScanner) Columns() ([]string, error) {
+func (s *testRows) Columns() ([]string, error) {
 	return s.columns, nil
 }
-func (s *testScanner) Next() bool {
+func (s *testRows) Next() bool {
 	if s.i < 0 {
 		s.i = 0
 	} else {
@@ -25,7 +25,7 @@ func (s *testScanner) Next() bool {
 	}
 	return s.i < len(s.rows)
 }
-func (s *testScanner) Scan(dests ...interface{}) error {
+func (s *testRows) Scan(dests ...interface{}) error {
 	if s.i >= len(s.rows) {
 		return errors.New("all data has been scanned.")
 	}
@@ -38,7 +38,7 @@ func (s *testScanner) Scan(dests ...interface{}) error {
 	}
 	return nil
 }
-func (s *testScanner) Err() error {
+func (s *testRows) Err() error {
 	return nil
 }
 
@@ -92,8 +92,8 @@ func TestScan2StructSlice(t *testing.T) {
 	t.Logf("%+v", got)
 }
 
-func testUsers() *testScanner {
-	return &testScanner{
+func testUsers() *testRows {
+	return &testRows{
 		columns: []string{"id", "user_name", "sex", "created_at"},
 		rows: [][]interface{}{
 			{1, "李雷", "男", testTime}, {2, "韩梅梅", "女", testTime},
