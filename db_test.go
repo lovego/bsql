@@ -95,6 +95,18 @@ func TestScanArray(t *testing.T) {
 	}
 }
 
+func TestScanNil(t *testing.T) {
+	db := getTestDB()
+	defer db.Close()
+	var data int
+	if err := db.Query(&data, `select null`); err != nil {
+		t.Error(err)
+	}
+	if data != 0 {
+		t.Errorf("unexpected: %v", data)
+	}
+}
+
 func getTestDB() *DB {
 	db, err := sql.Open("postgres", "postgres://develop:@localhost/bsql_test?sslmode=disable")
 	if err != nil {
