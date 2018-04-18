@@ -41,6 +41,30 @@ func TestValues(t *testing.T) {
 	}
 }
 
+func TestArray(t *testing.T) {
+	if got := Values(3); got != "{3}" {
+		t.Errorf("unexpected: %s", got)
+	}
+
+	if got := Values("a'bc"); got != "{'a''bc'}" {
+		t.Errorf("unexpected: %s", got)
+	}
+
+	if got := Values([]int{1, 2, 3}); got != "{1,2,3}" {
+		t.Errorf("unexpected: %s", got)
+	}
+
+	if got := Values([]string{"a", "b", "c"}); got != "{'a','b','c'}" {
+		t.Errorf("unexpected: %s", got)
+	}
+
+	if got := Values([][]interface{}{
+		{1, "a", true}, {2, "b", true}, {3, "c", false},
+	}); got != `{'[1,"a",true]','[2,"b",true]','[3,"c",f]'}` {
+		t.Errorf("unexpected: %s", got)
+	}
+}
+
 func TestStructValues(t *testing.T) {
 	data := []struct {
 		Id        int
