@@ -36,7 +36,7 @@ func TestValues(t *testing.T) {
 
 	if got := Values([][]interface{}{
 		{1, "a", true}, {2, "b", true}, {3, "c", false},
-	}); got != "(1,'a',t),(2,'b',t),(3,'c',f)" {
+	}); got != "(1,'a',true),(2,'b',true),(3,'c',false)" {
 		t.Errorf("unexpected: %s", got)
 	}
 }

@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+
+	"github.com/lib/pq"
 )
 
 type rowsType interface {
@@ -90,17 +92,22 @@ func structFieldsScanners(structValue reflect.Value, columns []columnType) ([]in
 	return result, nil
 }
 
-func scannerOf(addr reflect.Value, column columnType) interface{} {
+func scannerOf(addrValue reflect.Value, column columnType) interface{} {
+	addr := addrValue.Interface()
+	if _, ok := addr.(sql.Scanner); ok {
+		return addr
+	}
 	var dbType string
 	if column.ColumnType != nil {
 		dbType = column.ColumnType.DatabaseTypeName()
 	}
 	switch dbType {
 	case "JSONB", "JSON":
-		return jsonScanner{addr.Interface()}
-	// case "ARRAY":
+		return jsonScanner{addr}
+	case "ARRAY":
+		return pq.Array(addr)
 	default:
-		return addr.Interface()
+		return addr
 	}
 }
 
