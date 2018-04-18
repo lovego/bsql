@@ -104,13 +104,13 @@ func testUsers() *testRows {
 	}
 }
 
-func TestStructFieldsAddrs(t *testing.T) {
+func TestStructFieldsScanners(t *testing.T) {
 	var v struct {
 		Id     int64
 		Name   string
 		Exists bool
 	}
-	addrs, err := StructFieldsAddrs(reflect.ValueOf(&v).Elem(), []string{"Id", "Name", "Exists"})
+	addrs, err := StructFieldsScanners(reflect.ValueOf(&v).Elem(), []string{"Id", "Name", "Exists"})
 	if err != nil {
 		t.Fatal(err)
 	}
