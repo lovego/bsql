@@ -28,6 +28,20 @@ func TestScan2StructSlice(t *testing.T) {
 		t.Fatalf("unexpected: %+v", got)
 	}
 	t.Logf("%+v", got)
+
+	var got1 []*testUser
+	if err := scan(testUsers(), &got1); err != nil {
+		t.Fatal(err)
+	}
+	expect1 := []*testUser{
+		&testUser{1, "李雷", "男", testTime}, &testUser{2, "韩梅梅", "女", testTime},
+		&testUser{3, "Lili", "女", testTime}, &testUser{4, "Lucy", "女", testTime},
+		&testUser{5, "Mr Gao", "男", testTime}, &testUser{6, "Uncle Wang", "男", testTime},
+	}
+	if !reflect.DeepEqual(got1, expect1) {
+		t.Fatalf("unexpected: %+v", got1)
+	}
+	t.Logf("%+v", got1)
 }
 
 func TestScan2Slice(t *testing.T) {
