@@ -57,16 +57,15 @@ func scan(rows rowsType, data interface{}) error {
 	return rows.Err()
 }
 
-func scan2Slice(rows rowsType, columns []columnType, targets, p reflect.Value) error {
+func scan2Slice(rows rowsType, columns []columnType, targets, targetsPtr reflect.Value) error {
 	elemType := targets.Type().Elem()
 	var isPtr bool
 	if elemType.Kind() == reflect.Ptr {
 		elemType, isPtr = elemType.Elem(), true
 	}
 	for rows.Next() {
-		ts := reflect.MakeSlice(reflect.SliceOf(elemType), 1, 1)
-		ts.Index(0).Set(reflect.Zero(elemType))
-		target := ts.Index(0)
+		ptr := reflect.New(elemType)
+		target := ptr.Elem()
 		if elemType.Kind() == reflect.Struct {
 			if err := scan2Struct(rows, columns, target); err != nil {
 				return err
@@ -74,12 +73,12 @@ func scan2Slice(rows rowsType, columns []columnType, targets, p reflect.Value) e
 		} else if err := rows.Scan(scannerOf(target.Addr(), columns[0])); err != nil {
 			return err
 		}
-		if isPtr {
-			target = target.Addr()
+		if !isPtr {
+			ptr = ptr.Elem()
 		}
-		targets = reflect.Append(targets, target)
+		targets = reflect.Append(targets, ptr)
 	}
-	p.Elem().Set(targets)
+	targetsPtr.Elem().Set(targets)
 	return nil
 }
 
