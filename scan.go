@@ -24,8 +24,8 @@ func scan(rows rowsType, data interface{}) error {
 		return rows.Err()
 	}
 
-	p := reflect.ValueOf(data)
-	if p.Kind() != reflect.Ptr {
+	ptr := reflect.ValueOf(data)
+	if ptr.Kind() != reflect.Ptr {
 		return errors.New("data must be a pointer.")
 	}
 	columns, err := getColumns(rows)
@@ -35,10 +35,10 @@ func scan(rows rowsType, data interface{}) error {
 	if len(columns) == 0 {
 		return errors.New("no columns.")
 	}
-	target := p.Elem()
+	target := ptr.Elem()
 	switch target.Kind() {
 	case reflect.Slice, reflect.Array:
-		if err := scan2Slice(rows, columns, target, p); err != nil {
+		if err := scan2Slice(rows, columns, target, ptr); err != nil {
 			return err
 		}
 	case reflect.Struct:
@@ -49,7 +49,7 @@ func scan(rows rowsType, data interface{}) error {
 		}
 	default:
 		if rows.Next() {
-			if err := rows.Scan(scannerOf(p, columns[0])); err != nil {
+			if err := rows.Scan(scannerOf(ptr, columns[0])); err != nil {
 				return err
 			}
 		}
@@ -65,18 +65,18 @@ func scan2Slice(rows rowsType, columns []columnType, targets, targetsPtr reflect
 	}
 	for rows.Next() {
 		ptr := reflect.New(elemType)
-		target := ptr.Elem()
 		if elemType.Kind() == reflect.Struct {
-			if err := scan2Struct(rows, columns, target); err != nil {
+			if err := scan2Struct(rows, columns, ptr.Elem()); err != nil {
 				return err
 			}
-		} else if err := rows.Scan(scannerOf(target.Addr(), columns[0])); err != nil {
+		} else if err := rows.Scan(scannerOf(ptr, columns[0])); err != nil {
 			return err
 		}
-		if !isPtr {
-			ptr = ptr.Elem()
+		if isPtr {
+			targets = reflect.Append(targets, ptr)
+		} else {
+			targets = reflect.Append(targets, ptr.Elem())
 		}
-		targets = reflect.Append(targets, ptr)
 	}
 	targetsPtr.Elem().Set(targets)
 	return nil
