@@ -15,6 +15,15 @@ type rowsType interface {
 }
 
 func scan(rows rowsType, data interface{}) error {
+	if _, ok := data.(sql.Scanner); ok {
+		if rows.Next() {
+			if err := rows.Scan(data); err != nil {
+				return err
+			}
+		}
+		return rows.Err()
+	}
+
 	p := reflect.ValueOf(data)
 	if p.Kind() != reflect.Ptr {
 		return errors.New("data must be a pointer.")
@@ -66,24 +75,16 @@ func scan2Slice(rows rowsType, columns []columnType, targets, p reflect.Value) e
 }
 
 func scan2Struct(rows rowsType, columns []columnType, target reflect.Value) error {
-	scanners, err := structFieldsScanners(target, columns)
-	if err != nil {
-		return err
+	var scanners []interface{}
+	for _, column := range columns {
+		field := target.FieldByName(column.FieldName)
+		if !field.IsValid() {
+			return errors.New("no field: '" + column.FieldName + "' in struct.")
+		}
+		scanners = append(scanners, scannerOf(field.Addr(), column))
 	}
 	if err := rows.Scan(scanners...); err != nil {
 		return err
 	}
 	return nil
-}
-
-func structFieldsScanners(structValue reflect.Value, columns []columnType) ([]interface{}, error) {
-	var result []interface{}
-	for _, column := range columns {
-		field := structValue.FieldByName(column.FieldName)
-		if !field.IsValid() {
-			return nil, errors.New("no field: '" + column.FieldName + "' in struct.")
-		}
-		result = append(result, scannerOf(field.Addr(), column))
-	}
-	return result, nil
 }

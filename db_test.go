@@ -74,14 +74,12 @@ func TestDB(t *testing.T) {
 func TestScanArray(t *testing.T) {
 	db := getTestDB()
 	defer db.Close()
-	var ints struct {
-		Slice pq.Int64Array
-	}
+	var ints pq.Int64Array
 	if err := db.Query(&ints, `select '{1,2,3}'::int[] as slice`); err != nil {
 		t.Error(err)
 	}
-	if !reflect.DeepEqual(ints.Slice, pq.Int64Array([]int64{1, 2, 3})) {
-		t.Errorf("unexpected: %v", ints.Slice)
+	if !reflect.DeepEqual(ints, pq.Int64Array([]int64{1, 2, 3})) {
+		t.Errorf("unexpected: %v", ints)
 	}
 
 	var strs struct {
@@ -98,12 +96,41 @@ func TestScanArray(t *testing.T) {
 func TestScanNil(t *testing.T) {
 	db := getTestDB()
 	defer db.Close()
-	var data int
-	if err := db.Query(&data, `select null`); err != nil {
+
+	var i = 3
+	if err := db.Query(&i, `select null`); err != nil {
 		t.Error(err)
 	}
-	if data != 0 {
-		t.Errorf("unexpected: %v", data)
+	if i != 0 {
+		t.Errorf("unexpected: %v", i)
+	}
+
+	var ints pq.Int64Array
+	if err := db.Query(&ints, `select null`); err != nil {
+		t.Error(err)
+	}
+	if len(ints) != 0 {
+		t.Errorf("unexpected: %v", ints)
+	}
+
+	ints = pq.Int64Array{1}
+	if err := db.Query(&ints, `select null`); err != nil {
+		t.Error(err)
+	}
+	if len(ints) != 0 {
+		t.Errorf("unexpected: %v", ints)
+	}
+}
+
+func TestScanValueOutOfRange(t *testing.T) {
+	db := getTestDB()
+	defer db.Close()
+
+	var i int8
+	if err := db.Query(&i, `select 128`); err == nil {
+		t.Error("expect error")
+	} else {
+		t.Log(err)
 	}
 }
 

@@ -37,7 +37,13 @@ func (s *testRows) Scan(dests ...interface{}) error {
 		return fmt.Errorf("sql: expected most %d destination arguments in Scan, got %d", len(row), len(dests))
 	}
 	for i, dest := range dests {
-		reflect.ValueOf(dest).Elem().Set(reflect.ValueOf(row[i]))
+		if scanner, ok := dest.(sql.Scanner); ok {
+			if err := scanner.Scan(row[i]); err != nil {
+				return err
+			}
+		} else {
+			reflect.ValueOf(dest).Elem().Set(reflect.ValueOf(row[i]))
+		}
 	}
 	return nil
 }

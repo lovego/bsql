@@ -17,6 +17,14 @@ func Q(q string) string {
 	return "'" + strings.Replace(q, "'", "''", -1) + "'"
 }
 
+func Array(data interface{}) string {
+	v, err := pq.Array(data).Value()
+	if err != nil {
+		log.Panic("bsql Array: ", err)
+	}
+	return "'" + v.(string) + "'"
+}
+
 func Values(data interface{}) string {
 	value := reflect.ValueOf(data)
 	switch value.Kind() {
@@ -34,14 +42,6 @@ func Values(data interface{}) string {
 	default:
 		return "(" + V(value.Interface()) + ")"
 	}
-}
-
-func Array(data interface{}) string {
-	v, err := pq.Array(data).Value()
-	if err != nil {
-		log.Panic("bsql Array: ", err)
-	}
-	return "'" + v.(string) + "'"
 }
 
 func SliceContents(value reflect.Value) string {
@@ -81,6 +81,12 @@ func V(i interface{}) string {
 	switch v := i.(type) {
 	case string:
 		return Q(v)
+	case bool:
+		if v {
+			return "true"
+		} else {
+			return "false"
+		}
 	case int:
 		return strconv.FormatInt(int64(v), 10)
 	case int8:
@@ -101,12 +107,8 @@ func V(i interface{}) string {
 		return strconv.FormatUint(uint64(v), 10)
 	case uint64:
 		return strconv.FormatUint(v, 10)
-	case bool:
-		if v {
-			return "true"
-		} else {
-			return "false"
-		}
+	case nil:
+		return "NULL"
 	case []byte:
 		return string(v)
 	case time.Time:
