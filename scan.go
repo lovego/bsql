@@ -50,9 +50,14 @@ func scan(rows rowsType, data interface{}) error {
 
 func scan2Slice(rows rowsType, columns []columnType, targets, p reflect.Value) error {
 	elemType := targets.Type().Elem()
+	var isPtr bool
+	if elemType.Kind() == reflect.Ptr {
+		elemType, isPtr = elemType.Elem(), true
+	}
 	for rows.Next() {
-		targets = reflect.Append(targets, reflect.Zero(elemType))
-		target := targets.Index(targets.Len() - 1)
+		ts := reflect.MakeSlice(reflect.SliceOf(elemType), 1, 1)
+		ts.Index(0).Set(reflect.Zero(elemType))
+		target := ts.Index(0)
 		if elemType.Kind() == reflect.Struct {
 			if err := scan2Struct(rows, columns, target); err != nil {
 				return err
@@ -60,6 +65,10 @@ func scan2Slice(rows rowsType, columns []columnType, targets, p reflect.Value) e
 		} else if err := rows.Scan(scannerOf(target.Addr(), columns[0])); err != nil {
 			return err
 		}
+		if isPtr {
+			target = target.Addr()
+		}
+		targets = reflect.Append(targets, target)
 	}
 	p.Elem().Set(targets)
 	return nil
