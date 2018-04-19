@@ -3,7 +3,10 @@ package bsql
 import (
 	"context"
 	"database/sql"
+	"os"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 type DB struct {
@@ -26,6 +29,7 @@ func (db *DB) Query(data interface{}, sql string, args ...interface{}) error {
 }
 
 func (db *DB) QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error {
+	debugBsql(sql, args...)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
 	rows, err := db.DB.QueryContext(ctx, sql, args...)
@@ -47,6 +51,7 @@ func (db *DB) Exec(sql string, args ...interface{}) (sql.Result, error) {
 }
 
 func (db *DB) ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error) {
+	debugBsql(sql, args...)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
 	return db.DB.ExecContext(ctx, sql, args...)
@@ -70,4 +75,13 @@ func (db *DB) RunInTransaction(fn func(*Tx) error) error {
 		return err
 	}
 	return tx.Commit()
+}
+
+var DebugBsql = os.Getenv(`DebugBsql`) != ``
+
+func debugBsql(sql string, args ...interface{}) {
+	if DebugBsql {
+		color.Green(sql)
+		color.New(color.FgBlue).Println(args...)
+	}
 }

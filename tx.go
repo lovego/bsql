@@ -20,6 +20,7 @@ func (tx *Tx) Query(data interface{}, sql string, args ...interface{}) error {
 }
 
 func (tx *Tx) QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error {
+	debugBsql(sql, args...)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
 	rows, err := tx.Tx.QueryContext(ctx, sql, args...)
@@ -41,6 +42,7 @@ func (tx *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
 }
 
 func (tx *Tx) ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error) {
+	debugBsql(sql, args...)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
 	return tx.Tx.ExecContext(ctx, sql, args...)
