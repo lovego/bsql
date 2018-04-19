@@ -107,6 +107,10 @@ func V(i interface{}) string {
 		return strconv.FormatUint(uint64(v), 10)
 	case uint64:
 		return strconv.FormatUint(v, 10)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'G', -1, 32)
+	case float64:
+		return strconv.FormatFloat(v, 'G', -1, 64)
 	case nil:
 		return "NULL"
 	case []byte:

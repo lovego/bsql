@@ -78,6 +78,10 @@ func (bs basicScanner) Scan(src interface{}) error {
 		return scanUint32(d, src)
 	case *uint64:
 		return scanUint64(d, src)
+	case *float32:
+		return scanFloat32(d, src)
+	case *float64:
+		return scanFloat64(d, src)
 	case *[]byte:
 		return scanBytes(d, src)
 	case *time.Time:

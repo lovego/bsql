@@ -72,6 +72,13 @@ func TestStructValues(t *testing.T) {
 }
 
 func TestV(t *testing.T) {
+	if got := V(1.23); got != "1.23" {
+		t.Errorf("unexpected: %s", got)
+	}
+	if got := V(float64(1.23)); got != "1.23" {
+		t.Errorf("unexpected: %s", got)
+	}
+
 	if got := V(decimal.New(1230, -2)); got != "12.3" {
 		t.Errorf("unexpected: %s", got)
 	}

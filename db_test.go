@@ -134,6 +134,19 @@ func TestScanValueOutOfRange(t *testing.T) {
 	}
 }
 
+func TestScanFloat(t *testing.T) {
+	db := getTestDB()
+	defer db.Close()
+
+	var f float32
+	if err := db.Query(&f, `select 1.23`); err != nil {
+		t.Fatal(err)
+	}
+	if f != 1.23 {
+		t.Errorf("unexpected: %v", f)
+	}
+}
+
 func getTestDB() *DB {
 	db, err := sql.Open("postgres", "postgres://develop:@localhost/bsql_test?sslmode=disable")
 	if err != nil {

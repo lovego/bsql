@@ -2,6 +2,7 @@ package bsql
 
 import (
 	"fmt"
+	"strconv"
 )
 
 func scanInt(d *int, src interface{}) error {
@@ -156,6 +157,58 @@ func scanUint64(d *uint64, src interface{}) error {
 		*d = 0
 	default:
 		return fmt.Errorf("bsql: cannot assign %T(%v) to uint64", src, src)
+	}
+	return nil
+}
+
+func scanFloat32(d *float32, src interface{}) error {
+	switch s := src.(type) {
+	case float64:
+		if f := float32(s); float64(f) == s {
+			*d = f
+		} else {
+			return fmt.Errorf("bsql: cannot assign %T(%v) to float32: value out of range", src, src)
+		}
+	case []byte:
+		if f, err := strconv.ParseFloat(string(s), 32); err != nil {
+			return err
+		} else {
+			*d = float32(f)
+		}
+	case string:
+		if f, err := strconv.ParseFloat(s, 32); err != nil {
+			return err
+		} else {
+			*d = float32(f)
+		}
+	case nil:
+		*d = 0
+	default:
+		return fmt.Errorf("bsql: cannot assign %T(%v) to float32", src, src)
+	}
+	return nil
+}
+
+func scanFloat64(d *float64, src interface{}) error {
+	switch s := src.(type) {
+	case float64:
+		*d = s
+	case []byte:
+		if f, err := strconv.ParseFloat(string(s), 64); err != nil {
+			return err
+		} else {
+			*d = f
+		}
+	case string:
+		if f, err := strconv.ParseFloat(s, 64); err != nil {
+			return err
+		} else {
+			*d = f
+		}
+	case nil:
+		*d = 0
+	default:
+		return fmt.Errorf("bsql: cannot assign %T(%v) to float64", src, src)
 	}
 	return nil
 }
