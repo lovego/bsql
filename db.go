@@ -59,7 +59,17 @@ func (db *DB) ExecT(duration time.Duration, sql string, args ...interface{}) (sq
 }
 
 func (db *DB) RunInTransaction(fn func(*Tx) error) error {
-	tx, err := db.Begin()
+	if db.Timeout > 0 {
+		return db.RunInTransactionT(db.Timeout, fn)
+	} else {
+		return db.RunInTransactionT(time.Minute, fn)
+	}
+}
+
+func (db *DB) RunInTransactionT(duration time.Duration, fn func(*Tx) error) error {
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
+	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -85,7 +95,7 @@ func debugBsql(sql string, args ...interface{}) {
 		color.Green(sql)
 		argsString := ``
 		for _, arg := range args {
-			argsString += fmt.Sprintf("%#v", arg)
+			argsString += fmt.Sprintf("%#v ", arg)
 		}
 		color.Blue(argsString)
 	}
