@@ -3,6 +3,7 @@ package bsql
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"os"
 	"time"
 
@@ -82,6 +83,10 @@ var DebugBsql = os.Getenv(`DebugBsql`) != ``
 func debugBsql(sql string, args ...interface{}) {
 	if DebugBsql {
 		color.Green(sql)
-		color.New(color.FgBlue).Println(args...)
+		argsString := ``
+		for _, arg := range args {
+			argsString += fmt.Sprintf("%#v", arg)
+		}
+		color.Blue(argsString)
 	}
 }
