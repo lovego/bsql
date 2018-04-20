@@ -67,12 +67,19 @@ func StructValues(data interface{}, fields []string) string {
 }
 
 func StructValuesIn(value reflect.Value, fields []string) string {
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
 	if value.Kind() != reflect.Struct {
 		log.Panic("bsql: data must be struct or struct slice.")
 	}
 	var slice []string
 	for _, fieldName := range fields {
-		slice = append(slice, V(value.FieldByName(fieldName).Interface()))
+		field := value.FieldByName(fieldName)
+		if !field.IsValid() {
+			log.Panic("bsql: no field '" + fieldName + "' in struct.")
+		}
+		slice = append(slice, V(field.Interface()))
 	}
 	return "(" + strings.Join(slice, ",") + ")"
 }

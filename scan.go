@@ -26,14 +26,14 @@ func scan(rows rowsType, data interface{}) error {
 
 	ptr := reflect.ValueOf(data)
 	if ptr.Kind() != reflect.Ptr {
-		return errors.New("data must be a pointer.")
+		return errors.New("bsql: data must be a pointer.")
 	}
 	columns, err := getColumns(rows)
 	if err != nil {
 		return err
 	}
 	if len(columns) == 0 {
-		return errors.New("no columns.")
+		return errors.New("bsql: no columns.")
 	}
 	target := ptr.Elem()
 	switch target.Kind() {
@@ -87,7 +87,7 @@ func scan2Struct(rows rowsType, columns []columnType, target reflect.Value) erro
 	for _, column := range columns {
 		field := target.FieldByName(column.FieldName)
 		if !field.IsValid() {
-			return errors.New("no field: '" + column.FieldName + "' in struct.")
+			return errors.New("bsql: no field '" + column.FieldName + "' in struct.")
 		}
 		scanners = append(scanners, scannerOf(field.Addr(), column))
 	}
