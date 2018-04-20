@@ -35,12 +35,12 @@ type TestT struct {
 	Name        string
 	notExported int
 	TestT2
-}
-type TestT2 struct {
-	T2Name string
 	*TestT3
 	TestT4
 	testT5
+}
+type TestT2 struct {
+	T2Name string
 }
 type TestT3 struct {
 	T3Name string

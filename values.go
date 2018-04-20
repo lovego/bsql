@@ -77,7 +77,7 @@ func StructValuesIn(value reflect.Value, fields []string) string {
 	for _, fieldName := range fields {
 		field := value.FieldByName(fieldName)
 		if !field.IsValid() {
-			log.Panic("bsql: no field '" + fieldName + "' in struct.")
+			log.Panic("bsql: no field '" + fieldName + "' in struct")
 		}
 		slice = append(slice, V(field.Interface()))
 	}

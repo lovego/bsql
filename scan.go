@@ -87,7 +87,7 @@ func scan2Struct(rows rowsType, columns []columnType, target reflect.Value) erro
 	for _, column := range columns {
 		field := target.FieldByName(column.FieldName)
 		if !field.IsValid() {
-			return errors.New("bsql: no field '" + column.FieldName + "' in struct.")
+			return errors.New("bsql: no or multiple field '" + column.FieldName + "' in struct")
 		}
 		scanners = append(scanners, scannerOf(field.Addr(), column))
 	}

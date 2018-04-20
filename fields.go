@@ -51,16 +51,16 @@ func Fields2ColumnsStr(fields []string) string {
 	return strings.Join(result, ",")
 }
 
-func FieldsFromStruct(v interface{}, exclude []string) (result []string) {
-	traverseStructFields(reflect.ValueOf(v).Type(), func(name string) {
-		if notIn(name, exclude) {
-			result = append(result, name)
+func FieldsFromStruct(strct interface{}, exclude []string) (result []string) {
+	traverseStructFields(reflect.ValueOf(strct).Type(), func(field reflect.StructField) {
+		if notIn(field.Name, exclude) {
+			result = append(result, field.Name)
 		}
 	})
 	return
 }
 
-func traverseStructFields(typ reflect.Type, fn func(name string)) bool {
+func traverseStructFields(typ reflect.Type, fn func(field reflect.StructField)) bool {
 	if typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
@@ -71,7 +71,9 @@ func traverseStructFields(typ reflect.Type, fn func(name string)) bool {
 		field := typ.Field(i)
 		// exported field has an empty PkgPath
 		if (!field.Anonymous || !traverseStructFields(field.Type, fn)) && field.PkgPath == "" {
-			fn(field.Name)
+			if value, ok := field.Tag.Lookup(`sql`); !ok || value != "-" {
+				fn(field)
+			}
 		}
 	}
 	return true
