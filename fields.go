@@ -52,26 +52,32 @@ func Fields2ColumnsStr(fields []string) string {
 }
 
 func FieldsFromStruct(v interface{}, exclude []string) (result []string) {
-	LoopStructFields(reflect.ValueOf(v).Type(), func(name string) {
-		if NotIn(name, exclude) {
+	traverseStructFields(reflect.ValueOf(v).Type(), func(name string) {
+		if notIn(name, exclude) {
 			result = append(result, name)
 		}
 	})
 	return
 }
 
-func LoopStructFields(typ reflect.Type, fn func(name string)) {
+func traverseStructFields(typ reflect.Type, fn func(name string)) bool {
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+	if typ.Kind() != reflect.Struct {
+		return false
+	}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		if field.Anonymous {
-			LoopStructFields(field.Type, fn)
-		} else {
+		// exported field has an empty PkgPath
+		if (!field.Anonymous || !traverseStructFields(field.Type, fn)) && field.PkgPath == "" {
 			fn(field.Name)
 		}
 	}
+	return true
 }
 
-func NotIn(target string, slice []string) bool {
+func notIn(target string, slice []string) bool {
 	for _, elem := range slice {
 		if elem == target {
 			return false

@@ -31,21 +31,26 @@ func TestField2Column(t *testing.T) {
 	}
 }
 
-type T struct {
-	Name string
-	T2
+type TestT struct {
+	Name        string
+	notExported int
+	TestT2
 }
-type T2 struct {
+type TestT2 struct {
 	T2Name string
-	T3
+	*TestT3
+	TestT4
+	testT5
 }
-type T3 struct {
+type TestT3 struct {
 	T3Name string
 }
+type TestT4 int
+type testT5 string
 
 func TestFieldsFromStruct(t *testing.T) {
-	got := FieldsFromStruct(T{}, []string{"T2Name"})
-	expect := []string{"Name", "T3Name"}
+	got := FieldsFromStruct(TestT{}, []string{"T2Name"})
+	expect := []string{"Name", "T3Name", "TestT4"}
 	if !reflect.DeepEqual(got, expect) {
 		t.Fatalf("unexpected: %v", got)
 	}
