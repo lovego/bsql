@@ -36,7 +36,14 @@ func Columns2Fields(columns []string) (result []string) {
 	return result
 }
 
-func Fields2Columns(fields []string) string {
+func Fields2Columns(fields []string) (result []string) {
+	for _, field := range fields {
+		result = append(result, Field2Column(field))
+	}
+	return
+}
+
+func Fields2ColumnsStr(fields []string) string {
 	var result []string
 	for _, field := range fields {
 		result = append(result, Field2Column(field))

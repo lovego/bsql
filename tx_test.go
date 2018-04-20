@@ -26,7 +26,7 @@ func runTests(t *testing.T, db DbOrTx) {
 	// Rows
 	var gots []Student
 	var fields = FieldsFromStruct(Student{}, []string{"UpdatedAt"})
-	var columns = Fields2Columns(fields)
+	var columns = Fields2ColumnsStr(fields)
 	sql := fmt.Sprintf(
 		`insert into students (%s) values %s returning *`, columns,
 		StructValues(expects, fields),

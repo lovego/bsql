@@ -2,7 +2,6 @@ package bsql
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -27,9 +26,8 @@ func TestField2Column(t *testing.T) {
 			t.Errorf("expect: %v, got: %v", expects[i], got)
 		}
 	}
-	expect := strings.Join(expects, ",")
-	if got := Fields2Columns(inputs); !reflect.DeepEqual(expect, got) {
-		t.Errorf("expect: %v, got: %v", expect, got)
+	if got := Fields2Columns(inputs); !reflect.DeepEqual(expects, got) {
+		t.Errorf("expect: %v, got: %v", expects, got)
 	}
 }
 
