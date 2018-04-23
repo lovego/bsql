@@ -14,11 +14,11 @@ import (
 type Student struct {
 	Id        int64
 	Name      string
-	FriendIds pq.Int64Array
+	FriendIds pq.Int64Array `sql:"int[]"`
 	Cities    []string
 	Scores    map[string]int
 	Money     decimal.Decimal
-	Status    int8
+	Status    int8 `sql:"default 0"`
 	timeFields
 }
 
