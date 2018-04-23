@@ -2,7 +2,6 @@ package bsql
 
 import (
 	"reflect"
-	"regexp"
 	"strings"
 )
 
@@ -14,19 +13,32 @@ func Column2Field(column string) string {
 	return strings.Join(parts, "")
 }
 
-var camel = regexp.MustCompile("(^[^A-Z0-9]*|[A-Z0-9]*)([A-Z0-9][^A-Z]+|$)")
-
-func Field2Column(s string) string {
-	var a []string
-	for _, sub := range camel.FindAllStringSubmatch(s, -1) {
-		if sub[1] != "" {
-			a = append(a, sub[1])
-		}
-		if sub[2] != "" {
-			a = append(a, sub[2])
+/* 单词边界有两种
+1. 非大写字符，且下一个是大写字符
+2. 大写字符，且下一个是大写字符，且下下一个是非大写字符
+*/
+func Field2Column(str string) string {
+	var slice []string
+	start := 0
+	for end, char := range str {
+		if end+1 < len(str) {
+			next := str[end+1]
+			if char < 'A' || char > 'Z' {
+				if next >= 'A' && next <= 'Z' { // 非大写下一个是大写
+					slice = append(slice, str[start:end+1])
+					start, end = end+1, end+1
+				}
+			} else if end+2 < len(str) && (next >= 'A' && next <= 'Z') {
+				if next2 := str[end+2]; next2 < 'A' || next2 > 'Z' {
+					slice = append(slice, str[start:end+1])
+					start, end = end+1, end+1
+				}
+			}
+		} else {
+			slice = append(slice, str[start:end+1])
 		}
 	}
-	return strings.ToLower(strings.Join(a, "_"))
+	return strings.ToLower(strings.Join(slice, "_"))
 }
 
 func Columns2Fields(columns []string) (result []string) {

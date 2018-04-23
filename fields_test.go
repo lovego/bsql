@@ -6,8 +6,8 @@ import (
 )
 
 func TestColumn2Field(t *testing.T) {
-	var inputs = []string{"xiao_mei", "http_status", "you123"}
-	var expects = []string{"XiaoMei", "HttpStatus", "You123"}
+	var inputs = []string{"xiao_mei", "http_status", "you123", "price_p"}
+	var expects = []string{"XiaoMei", "HttpStatus", "You123", "PriceP"}
 	for i := range inputs {
 		if got := Column2Field(inputs[i]); !reflect.DeepEqual(expects[i], got) {
 			t.Errorf("expect: %v, got: %v", expects, got)
@@ -19,8 +19,12 @@ func TestColumn2Field(t *testing.T) {
 }
 
 func TestField2Column(t *testing.T) {
-	var inputs = []string{"XiaoMei", "HTTPStatus", "You123"}
-	var expects = []string{"xiao_mei", "http_status", "you123"}
+	var inputs = []string{"XiaoMei", "HTTPStatus", "You123",
+		"PriceP", "4sPrice", "Price4s", "goodHTTP", "ILoveGolangAndJSONSoMuch",
+	}
+	var expects = []string{"xiao_mei", "http_status", "you123",
+		"price_p", "4s_price", "price4s", "good_http", "i_love_golang_and_json_so_much",
+	}
 	for i := range inputs {
 		if got := Field2Column(inputs[i]); expects[i] != got {
 			t.Errorf("expect: %v, got: %v", expects[i], got)
@@ -28,6 +32,8 @@ func TestField2Column(t *testing.T) {
 	}
 	if got := Fields2Columns(inputs); !reflect.DeepEqual(expects, got) {
 		t.Errorf("expect: %v, got: %v", expects, got)
+	} else {
+		t.Log(got)
 	}
 }
 
