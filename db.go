@@ -140,7 +140,7 @@ func (db *DB) RunInTransactionCtx(ctx context.Context, opName string, fn func(*T
 			panic(err)
 		}
 	}()
-	if err := fn(&Tx{tx, db.timeout}, tracer.Context(ctx, span)); err != nil {
+	if err := fn(&Tx{tx, db.timeout}, tracer.Context(context.Background(), span)); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
