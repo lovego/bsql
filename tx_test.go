@@ -11,7 +11,7 @@ import (
 
 func TestRunInTransactionAndTx(t *testing.T) {
 	db := getTestDB()
-	defer db.Close()
+	defer db.db.Close()
 	if err := db.RunInTransaction(func(tx *Tx) error {
 		runTests(t, tx)
 		return nil

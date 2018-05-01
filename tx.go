@@ -4,26 +4,44 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/lovego/tracer"
 )
 
 type Tx struct {
-	*sql.Tx
-	Timeout time.Duration
+	tx      *sql.Tx
+	timeout time.Duration
 }
 
 func (tx *Tx) Query(data interface{}, sql string, args ...interface{}) error {
-	if tx.Timeout > 0 {
-		return tx.QueryT(tx.Timeout, data, sql, args...)
-	} else {
-		return tx.QueryT(time.Minute, data, sql, args...)
-	}
+	return tx.QueryT(tx.timeout, data, sql, args...)
 }
 
-func (tx *Tx) QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error {
-	debugBsql(sql, args...)
+func (tx *Tx) QueryT(duration time.Duration,
+	data interface{}, sql string, args ...interface{},
+) error {
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
-	rows, err := tx.Tx.QueryContext(ctx, sql, args...)
+	return tx.query(ctx, data, sql, args)
+}
+
+func (tx *Tx) QueryCtx(ctx context.Context, opName string,
+	data interface{}, sql string, args ...interface{},
+) error {
+	defer tracer.StartSpan(ctx, opName).Finish()
+	if ctx.Done() == nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, tx.timeout)
+		defer cancel()
+	}
+	return tx.query(ctx, data, sql, args)
+}
+
+func (tx *Tx) query(ctx context.Context, data interface{}, sql string, args []interface{}) error {
+	if debug {
+		debugSql(sql, args)
+	}
+	rows, err := tx.tx.QueryContext(ctx, sql, args...)
 	if rows != nil {
 		defer rows.Close()
 	}
@@ -34,16 +52,31 @@ func (tx *Tx) QueryT(duration time.Duration, data interface{}, sql string, args 
 }
 
 func (tx *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	if tx.Timeout > 0 {
-		return tx.ExecT(tx.Timeout, sql, args...)
-	} else {
-		return tx.ExecT(time.Minute, sql, args...)
-	}
+	return tx.ExecT(tx.timeout, sql, args...)
 }
 
-func (tx *Tx) ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error) {
-	debugBsql(sql, args...)
+func (tx *Tx) ExecT(
+	duration time.Duration, sql string, args ...interface{},
+) (sql.Result, error) {
+	if debug {
+		debugSql(sql, args)
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
-	return tx.Tx.ExecContext(ctx, sql, args...)
+	return tx.tx.ExecContext(ctx, sql, args...)
+}
+
+func (tx *Tx) ExecCtx(
+	ctx context.Context, opName string, sql string, args ...interface{},
+) (sql.Result, error) {
+	defer tracer.StartSpan(ctx, opName).Finish()
+	if ctx.Done() == nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, tx.timeout)
+		defer cancel()
+	}
+	if debug {
+		debugSql(sql, args)
+	}
+	return tx.tx.ExecContext(ctx, sql, args...)
 }

@@ -8,12 +8,14 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/lovego/tracer"
 )
 
 type DB struct {
-	*sql.DB
-	Timeout time.Duration
+	db      *sql.DB
+	timeout time.Duration
 }
+
 type DbOrTx interface {
 	Query(data interface{}, sql string, args ...interface{}) error
 	QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error
@@ -21,19 +23,42 @@ type DbOrTx interface {
 	ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error)
 }
 
-func (db *DB) Query(data interface{}, sql string, args ...interface{}) error {
-	if db.Timeout > 0 {
-		return db.QueryT(db.Timeout, data, sql, args...)
-	} else {
-		return db.QueryT(time.Minute, data, sql, args...)
+func New(db *sql.DB, timeout time.Duration) *DB {
+	if timeout <= 0 {
+		timeout = time.Minute
 	}
+	return &DB{db, timeout}
+}
+
+func (db *DB) Query(data interface{}, sql string, args ...interface{}) error {
+	return db.QueryT(db.timeout, data, sql, args...)
 }
 
 func (db *DB) QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error {
-	debugBsql(sql, args...)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
-	rows, err := db.DB.QueryContext(ctx, sql, args...)
+	return db.query(ctx, data, sql, args)
+}
+
+func (db *DB) QueryCtx(ctx context.Context, opName string,
+	data interface{}, sql string, args ...interface{},
+) error {
+	defer tracer.StartSpan(ctx, opName).Finish()
+	if ctx.Done() == nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, db.timeout)
+		defer cancel()
+	}
+	return db.query(ctx, data, sql, args)
+
+}
+func (db *DB) query(ctx context.Context,
+	data interface{}, sql string, args []interface{},
+) error {
+	if debug {
+		debugSql(sql, args)
+	}
+	rows, err := db.db.QueryContext(ctx, sql, args...)
 	if rows != nil {
 		defer rows.Close()
 	}
@@ -44,59 +69,91 @@ func (db *DB) QueryT(duration time.Duration, data interface{}, sql string, args 
 }
 
 func (db *DB) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	if db.Timeout > 0 {
-		return db.ExecT(db.Timeout, sql, args...)
-	} else {
-		return db.ExecT(time.Minute, sql, args...)
-	}
+	return db.ExecT(db.timeout, sql, args...)
 }
 
 func (db *DB) ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error) {
-	debugBsql(sql, args...)
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
-	return db.DB.ExecContext(ctx, sql, args...)
+	if debug {
+		debugSql(sql, args)
+	}
+	return db.db.ExecContext(ctx, sql, args...)
+}
+
+func (db *DB) ExecCtx(ctx context.Context, opName string,
+	sql string, args ...interface{}) (sql.Result, error) {
+	defer tracer.StartSpan(ctx, opName).Finish()
+	if ctx.Done() == nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, db.timeout)
+		defer cancel()
+	}
+	if debug {
+		debugSql(sql, args)
+	}
+	return db.db.ExecContext(ctx, sql, args...)
 }
 
 func (db *DB) RunInTransaction(fn func(*Tx) error) error {
-	if db.Timeout > 0 {
-		return db.RunInTransactionT(db.Timeout, fn)
-	} else {
-		return db.RunInTransactionT(time.Minute, fn)
-	}
+	return db.RunInTransactionT(db.timeout, fn)
 }
 
 func (db *DB) RunInTransactionT(duration time.Duration, fn func(*Tx) error) error {
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
-	tx, err := db.BeginTx(ctx, nil)
+
+	tx, err := db.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		if err := recover(); err != nil {
 			_ = tx.Rollback()
 			panic(err)
 		}
 	}()
-
-	if err := fn(&Tx{tx, db.Timeout}); err != nil {
+	if err := fn(&Tx{tx, db.timeout}); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
 	return tx.Commit()
 }
 
-var DebugBsql = os.Getenv(`DebugBsql`) != ``
+func (db *DB) RunInTransactionCtx(ctx context.Context, opName string, fn func(*Tx, context.Context) error) error {
+	span := tracer.StartSpan(ctx, opName)
+	defer span.Finish()
 
-func debugBsql(sql string, args ...interface{}) {
-	if DebugBsql {
-		color.Green(sql)
-		argsString := ``
-		for _, arg := range args {
-			argsString += fmt.Sprintf("%#v ", arg)
-		}
-		color.Blue(argsString)
+	if ctx.Done() == nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, db.timeout)
+		defer cancel()
 	}
+
+	tx, err := db.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := recover(); err != nil {
+			_ = tx.Rollback()
+			panic(err)
+		}
+	}()
+	if err := fn(&Tx{tx, db.timeout}, tracer.Context(ctx, span)); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	return tx.Commit()
+}
+
+var debug = os.Getenv(`DebugBsql`) != ``
+
+func debugSql(sql string, args []interface{}) {
+	color.Green(sql)
+	argsString := ``
+	for _, arg := range args {
+		argsString += fmt.Sprintf("%#v ", arg)
+	}
+	color.Blue(argsString)
 }

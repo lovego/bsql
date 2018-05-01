@@ -67,13 +67,13 @@ func createTable(t *testing.T, db DbOrTx) {
 
 func TestDB(t *testing.T) {
 	db := getTestDB()
-	defer db.Close()
+	defer db.db.Close()
 	runTests(t, db)
 }
 
 func TestScanArray(t *testing.T) {
 	db := getTestDB()
-	defer db.Close()
+	defer db.db.Close()
 	var ints pq.Int64Array
 	if err := db.Query(&ints, `select '{1,2,3}'::int[] as slice`); err != nil {
 		t.Error(err)
@@ -95,7 +95,7 @@ func TestScanArray(t *testing.T) {
 
 func TestScanNil(t *testing.T) {
 	db := getTestDB()
-	defer db.Close()
+	defer db.db.Close()
 
 	var i = 3
 	if err := db.Query(&i, `select null`); err != nil {
@@ -124,7 +124,7 @@ func TestScanNil(t *testing.T) {
 
 func TestScanValueOutOfRange(t *testing.T) {
 	db := getTestDB()
-	defer db.Close()
+	defer db.db.Close()
 
 	var i int8
 	if err := db.Query(&i, `select 128`); err == nil {
@@ -136,7 +136,7 @@ func TestScanValueOutOfRange(t *testing.T) {
 
 func TestScanFloat(t *testing.T) {
 	db := getTestDB()
-	defer db.Close()
+	defer db.db.Close()
 
 	var f float32
 	if err := db.Query(&f, `select 1.23`); err != nil {
