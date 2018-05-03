@@ -37,27 +37,44 @@ func TestField2Column(t *testing.T) {
 	}
 }
 
-type TestT struct {
-	Name        string
-	notExported int
-	TestT2
-	*TestT3
-	TestT4
-	testT5
-}
-type TestT2 struct {
-	T2Name string
-}
-type TestT3 struct {
-	T3Name string
-}
-type TestT4 int
-type testT5 string
-
 func TestFieldsFromStruct(t *testing.T) {
+	type TestT2 struct {
+		T2Name string
+	}
+	type TestT3 struct {
+		T3Name string
+	}
+	type TestT4 int
+	type testT5 string
+
+	type TestT struct {
+		Name        string
+		notExported int
+		TestT2
+		*TestT3
+		TestT4
+		testT5
+	}
+
 	got := FieldsFromStruct(TestT{}, []string{"T2Name"})
 	expect := []string{"Name", "T3Name", "TestT4"}
 	if !reflect.DeepEqual(got, expect) {
+		t.Fatalf("unexpected: %v", got)
+	}
+}
+
+func TestColumnsComments(t *testing.T) {
+	type Test struct {
+		Id          int64  `comment:"主键"`
+		Name        string `comment:"名称"`
+		notExported int
+	}
+
+	got := ColumnsComments("tests", Test{})
+	expect := `comment on column tests.id is '主键';
+comment on column tests.name is '名称';
+`
+	if got != expect {
 		t.Fatalf("unexpected: %v", got)
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/lovego/struct_tag"
 )
 
 var typesMap = make(map[string]bool)
@@ -33,7 +35,7 @@ func init() {
 
 func ColumnsDefs(strct interface{}) string {
 	var columns []string
-	traverseStructFields(reflect.ValueOf(strct).Type(), func(field reflect.StructField) {
+	traverseStructFields(reflect.TypeOf(strct), func(field reflect.StructField) {
 		columns = append(columns, Field2Column(field.Name)+" "+getColumnDefinition(field))
 	})
 	return strings.Join(columns, ",\n")
@@ -41,7 +43,7 @@ func ColumnsDefs(strct interface{}) string {
 
 func getColumnDefinition(field reflect.StructField) string {
 	var def []string
-	tag, ok := field.Tag.Lookup(`sql`)
+	tag, ok := struct_tag.Lookup(string(field.Tag), `sql`)
 	if ok {
 		tag = strings.TrimSpace(tag)
 	}

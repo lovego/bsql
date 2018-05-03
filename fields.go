@@ -1,8 +1,11 @@
 package bsql
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/lovego/struct_tag"
 )
 
 func Column2Field(column string) string {
@@ -64,9 +67,20 @@ func Fields2ColumnsStr(fields []string) string {
 }
 
 func FieldsFromStruct(strct interface{}, exclude []string) (result []string) {
-	traverseStructFields(reflect.ValueOf(strct).Type(), func(field reflect.StructField) {
+	traverseStructFields(reflect.TypeOf(strct), func(field reflect.StructField) {
 		if notIn(field.Name, exclude) {
 			result = append(result, field.Name)
+		}
+	})
+	return
+}
+
+func ColumnsComments(table string, strct interface{}) (result string) {
+	traverseStructFields(reflect.TypeOf(strct), func(field reflect.StructField) {
+		if comment, _ := struct_tag.Lookup(string(field.Tag), "comment"); comment != "" {
+			result += fmt.Sprintf(
+				"comment on column %s.%s is %s;\n", table, Field2Column(field.Name), Q(comment),
+			)
 		}
 	})
 	return
@@ -83,7 +97,7 @@ func traverseStructFields(typ reflect.Type, fn func(field reflect.StructField)) 
 		field := typ.Field(i)
 		// exported field has an empty PkgPath
 		if (!field.Anonymous || !traverseStructFields(field.Type, fn)) && field.PkgPath == "" {
-			if value, ok := field.Tag.Lookup(`sql`); !ok || value != "-" {
+			if value, ok := struct_tag.Lookup(string(field.Tag), `sql`); !ok || value != "-" {
 				fn(field)
 			}
 		}
