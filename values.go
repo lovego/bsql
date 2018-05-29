@@ -22,6 +22,9 @@ func Array(data interface{}) string {
 	if err != nil {
 		log.Panic("bsql Array: ", err)
 	}
+	if v == nil {
+		return "'{}'"
+	}
 	return "'" + strings.Replace(v.(string), "'", "''", -1) + "'"
 }
 
