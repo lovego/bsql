@@ -51,8 +51,24 @@ func TestArray(t *testing.T) {
 	}
 
 	if got := Array([][]interface{}{
-		{1, "a", true}, {2, "b", true}, {3, "c", false},
-	}); got != `'{{1,"a",true},{2,"b",true},{3,"c",false}}'` {
+		{1, "a", true}, {2, "b", true}, {3, "c", false}, {4, "dd'ee", false},
+	}); got != `'{{1,"a",true},{2,"b",true},{3,"c",false},{4,"dd''ee",false}}'` {
+		t.Errorf("unexpected: %s", got)
+	}
+}
+
+func TestJsonArray(t *testing.T) {
+	if got := JsonArray([]int{1, 2, 3}); got != "'[1,2,3]'" {
+		t.Errorf("unexpected: %s", got)
+	}
+
+	if got := JsonArray([]string{"a", "b", "c"}); got != `'["a","b","c"]'` {
+		t.Errorf("unexpected: %s", got)
+	}
+
+	if got := JsonArray([][]interface{}{
+		{1, "a", true}, {2, "b", true}, {3, "c", false}, {4, "dd'ee", false},
+	}); got != `'[[1,"a",true],[2,"b",true],[3,"c",false],[4,"dd''ee",false]]'` {
 		t.Errorf("unexpected: %s", got)
 	}
 }

@@ -22,7 +22,15 @@ func Array(data interface{}) string {
 	if err != nil {
 		log.Panic("bsql Array: ", err)
 	}
-	return "'" + v.(string) + "'"
+	return "'" + strings.Replace(v.(string), "'", "''", -1) + "'"
+}
+
+func JsonArray(data interface{}) string {
+	b, err := json.Marshal(data)
+	if err != nil {
+		log.Panic("bsql JsonArray: ", err)
+	}
+	return "'" + strings.Replace(string(b), "'", "''", -1) + "'"
 }
 
 func Values(data interface{}) string {
