@@ -148,7 +148,7 @@ func TestScanFloat(t *testing.T) {
 }
 
 func getTestDB() *DB {
-	db, err := sql.Open("postgres", "postgres://develop:@localhost/bsql_test?sslmode=disable")
+	db, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
 	if err != nil {
 		log.Panic(err)
 	}

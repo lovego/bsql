@@ -3,10 +3,14 @@ go:
   - "1.8"
   - "1.9"
   - "1.10"
+services:
+  - postgresql
 install:
   - go get -t ./...
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
+before_script:
+  - psql -c 'create database bsql_test;' -U postgres
 script:
   - go test -v -covermode=count -coverprofile=coverage.out ./...
   - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci
