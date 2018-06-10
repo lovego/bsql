@@ -86,7 +86,7 @@ func StructValuesIn(value reflect.Value, fields []string) string {
 	}
 	var slice []string
 	for _, fieldName := range fields {
-		field := value.FieldByName(fieldName)
+		field := structField(value, fieldName)
 		if !field.IsValid() {
 			log.Panic("bsql: no field '" + fieldName + "' in struct")
 		}
@@ -161,4 +161,17 @@ func valuer(v driver.Valuer) string {
 	default:
 		return V(ifc)
 	}
+}
+
+func structField(strct reflect.Value, fieldName string) reflect.Value {
+	if strings.IndexByte(fieldName, '.') <= 0 {
+		return strct.FieldByName(fieldName)
+	}
+	for _, name := range strings.Split(fieldName, ".") {
+		strct = strct.FieldByName(name)
+		if !strct.IsValid() {
+			return strct
+		}
+	}
+	return strct
 }

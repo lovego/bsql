@@ -115,3 +115,21 @@ func TestV(t *testing.T) {
 		t.Errorf("unexpected: %s", got)
 	}
 }
+
+func TestStructField(t *testing.T) {
+	type T2 struct {
+		Name string
+	}
+	type T struct {
+		T2
+	}
+	v := reflect.ValueOf(T{T2{"name"}})
+
+	if got := structField(v, "Name"); got.Interface() != "name" {
+		t.Errorf("unexpected: %v", got)
+	}
+
+	if got := structField(v, "T2.Name"); got.Interface() != "name" {
+		t.Errorf("unexpected: %v", got)
+	}
+}
