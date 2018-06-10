@@ -1,4 +1,6 @@
-# beautiful sql utils for postgresql
+# beautiful sql utils
+If you don't like ORM, but need convenient utils to help you make sql, this library is for you.
+Now only postgresql is supported.
 
 [![Build Status](https://travis-ci.org/lovego/bsql.svg?branch=master)](https://travis-ci.org/lovego/bsql)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lovego/bsql)](https://goreportcard.com/report/github.com/lovego/bsql)
