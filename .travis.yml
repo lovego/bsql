@@ -3,22 +3,14 @@ go:
   - "1.8"
   - "1.9"
   - "1.10"
-addons:
-  postgresql: "10"
-  apt:
-    packages:
-    - postgresql-10
-    - postgresql-client-10
-env:
-  global:
-  - PGPORT=5433
-
+services:
+  - postgresql
 install:
   - go get -t ./...
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
 before_script:
-  - sudo -u postgres psql -c 'create database bsql_test;' -U postgres
+  - psql -c 'create database bsql_test;' -U postgres
 script:
   - go test -v -covermode=count -coverprofile=coverage.out ./...
   - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci
