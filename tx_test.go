@@ -50,7 +50,7 @@ func runTests(t *testing.T, db DbOrTx) {
 
 	// strings
 	var gotNames []string
-	sql = fmt.Sprintf(`select name from students where scores @> %v order by id`, V(map[string]int{"英语": 97}))
+	sql = fmt.Sprintf(`select name from students where id in %s order by id`, Values([]int{1, 2}))
 	if err := db.Query(&gotNames, sql); err != nil {
 		t.Log(sql)
 		t.Fatal(err)
