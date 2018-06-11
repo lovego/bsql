@@ -74,10 +74,11 @@ func TestJsonArray(t *testing.T) {
 }
 
 func TestStructValues(t *testing.T) {
-	data := []struct {
+	type student struct {
 		Id        int
 		Name, Sex string
-	}{
+	}
+	data := []student{
 		{1, "李雷", "男"}, {2, "韩梅梅", "女"},
 		{3, "Lili", "女"}, {4, "Lucy", "女"},
 	}
@@ -86,14 +87,20 @@ func TestStructValues(t *testing.T) {
 		t.Errorf("unexpected: %s", got)
 	}
 
-	data2 := []*struct {
-		Id        int
-		Name, Sex string
-	}{
+	data2 := []*student{
 		{1, "李雷", "男"}, {2, "韩梅梅", "女"},
 		{3, "Lili", "女"}, {4, "Lucy", "女"},
 	}
 	got = StructValues(data2, []string{"Id", "Name"})
+	if got != "(1,'李雷'),(2,'韩梅梅'),(3,'Lili'),(4,'Lucy')" {
+		t.Errorf("unexpected: %s", got)
+	}
+
+	data3 := []interface{}{
+		student{1, "李雷", "男"}, student{2, "韩梅梅", "女"},
+		student{3, "Lili", "女"}, student{4, "Lucy", "女"},
+	}
+	got = StructValues(data3, []string{"Id", "Name"})
 	if got != "(1,'李雷'),(2,'韩梅梅'),(3,'Lili'),(4,'Lucy')" {
 		t.Errorf("unexpected: %s", got)
 	}

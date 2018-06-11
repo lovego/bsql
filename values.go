@@ -78,7 +78,7 @@ func StructValues(data interface{}, fields []string) string {
 }
 
 func StructValuesIn(value reflect.Value, fields []string) string {
-	if value.Kind() == reflect.Ptr {
+	if value.Kind() == reflect.Ptr || value.Kind() == reflect.Interface {
 		value = value.Elem()
 	}
 	if value.Kind() != reflect.Struct {
