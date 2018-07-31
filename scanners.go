@@ -87,7 +87,7 @@ func (bs basicScanner) Scan(src interface{}) error {
 	case *time.Time:
 		return scanTime(d, src)
 	default:
-		return fmt.Errorf("bsql: unsupported dest type: %T", src)
+		return fmt.Errorf("bsql: unsupported dest type: %T", bs.dest)
 	}
 	return nil
 }
