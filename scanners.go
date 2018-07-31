@@ -46,7 +46,9 @@ func (js jsonScanner) Scan(src interface{}) error {
 	case []byte:
 		return json.Unmarshal(buf, js.dest)
 	case nil:
-		return basicScanner{js.dest}.Scan(src)
+		v := reflect.ValueOf(js.dest).Elem()
+		v.Set(reflect.Zero(v.Type()))
+		return nil
 	default:
 		return fmt.Errorf("bsql jsonScanner unexpected: %T %v", src, src)
 	}
