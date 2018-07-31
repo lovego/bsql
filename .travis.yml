@@ -7,7 +7,6 @@ services:
   - postgresql
 install:
   - go get -t ./...
-  - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
 before_script:
   - psql -c 'create database bsql_test;' -U postgres
