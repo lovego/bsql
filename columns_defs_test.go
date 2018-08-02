@@ -1,6 +1,7 @@
 package bsql
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -33,14 +34,6 @@ func ExampleColumnsDefs() {
 		Status    int8 `sql:"default 0"`
 		timeFields
 	}
-	output := ColumnsDefs(Student{})
-	//  output : `id serial8 not null primary key,
-	// name text not null,
-	// friend_ids int[] not null,
-	// cities jsonb not null,
-	// scores jsonb not null,
-	// money decimal not null,
-	// status int2 not null default 0,
-	// created_at timestamptz not null,
-	// updated_at timestamptz not null`
+	got := ColumnsDefs(Student{})
+	fmt.Println(got)
 }
