@@ -1,17 +1,13 @@
 package bsql
 
 import (
+	"fmt"
 	"testing"
 )
 
-func ExampleColumnsDefs(t *testing.InternalExample) {
+func ExampleColumnsDefs(t *testing.T) {
 	got := ColumnsDefs(Student{})
-	// if got != expect {
-	// 	t.Error("unexpetecd: ", got)
-	// } else {
-	// 	t.Log(got)
-	// }
-	t.Output = `id serial8 not null primary key,
+	expect := `id serial8 not null primary key,
 name text not null,
 friend_ids int[] not null,
 cities jsonb not null,
@@ -20,4 +16,10 @@ money decimal not null,
 status int2 not null default 0,
 created_at timestamptz not null,
 updated_at timestamptz not null`
+	if got != expect {
+		t.Error("unexpetecd: ", got)
+	} else {
+		t.Log(got)
+	}
+	fmt.Println(expect)
 }
