@@ -34,6 +34,14 @@ func New(db *sql.DB, timeout time.Duration) *DB {
 }
 
 // Query executes the sql, scans the results into the data, and returns an error.
+// var people struct {
+// 		Name string
+// 		Age  int
+// 	}
+// 	var db *DB
+// 	if err := db.Query(&people, `select name, age from peoples where id = $1`, 1); err != nil {
+// 		errs.Trace(err)
+// 	}
 func (db *DB) Query(data interface{}, sql string, args ...interface{}) error {
 	return db.QueryT(db.timeout, data, sql, args...)
 }
