@@ -1,43 +1,33 @@
 package bsql
 
 import (
-	"reflect"
-	"testing"
+	"fmt"
 )
 
-func TestColumn2Field(t *testing.T) {
+func ExampleColumn2Field() {
 	var inputs = []string{"xiao_mei", "http_status", "you123", "price_p"}
-	var expects = []string{"XiaoMei", "HttpStatus", "You123", "PriceP"}
 	for i := range inputs {
-		if got := Column2Field(inputs[i]); !reflect.DeepEqual(expects[i], got) {
-			t.Errorf("expect: %v, got: %v", expects, got)
-		}
+		fmt.Println(Column2Field(inputs[i]))
 	}
-	if got := Columns2Fields(inputs); !reflect.DeepEqual(expects, got) {
-		t.Errorf("expect: %v, got: %v", expects, got)
-	}
+	fmt.Println(Columns2Fields(inputs))
+	// Output:
+	// XiaoMei
+	// HttpStatus
+	// You123
+	// PriceP
+	// [XiaoMei HttpStatus You123 PriceP]
 }
 
-func TestField2Column(t *testing.T) {
+func ExampleField2Column() {
 	var inputs = []string{"XiaoMei", "HTTPStatus", "You123",
 		"PriceP", "4sPrice", "Price4s", "goodHTTP", "ILoveGolangAndJSONSoMuch",
 	}
-	var expects = []string{"xiao_mei", "http_status", "you123",
-		"price_p", "4s_price", "price4s", "good_http", "i_love_golang_and_json_so_much",
-	}
-	for i := range inputs {
-		if got := Field2Column(inputs[i]); expects[i] != got {
-			t.Errorf("expect: %v, got: %v", expects[i], got)
-		}
-	}
-	if got := Fields2Columns(inputs); !reflect.DeepEqual(expects, got) {
-		t.Errorf("expect: %v, got: %v", expects, got)
-	} else {
-		t.Log(got)
-	}
+	fmt.Println(Fields2Columns(inputs))
+	// Output:
+	// [xiao_mei http_status you123 price_p 4s_price price4s good_http i_love_golang_and_json_so_much]
 }
 
-func TestFieldsFromStruct(t *testing.T) {
+func ExampleFieldsFromStruct() {
 	type TestT2 struct {
 		T2Name string
 	}
@@ -55,26 +45,20 @@ func TestFieldsFromStruct(t *testing.T) {
 		TestT4
 		testT5
 	}
-
-	got := FieldsFromStruct(TestT{}, []string{"T2Name"})
-	expect := []string{"Name", "T3Name", "TestT4"}
-	if !reflect.DeepEqual(got, expect) {
-		t.Fatalf("unexpected: %v", got)
-	}
+	fmt.Println(FieldsFromStruct(TestT{}, []string{"T2Name"}))
+	// Output:
+	// [Name T3Name TestT4]
 }
 
-func TestColumnsComments(t *testing.T) {
+func ExampleColumnsComments() {
 	type Test struct {
 		Id          int64  `comment:"主键"`
 		Name        string `comment:"名称"`
 		notExported int
 	}
 
-	got := ColumnsComments("tests", Test{})
-	expect := `comment on column tests.id is '主键';
-comment on column tests.name is '名称';
-`
-	if got != expect {
-		t.Fatalf("unexpected: %v", got)
-	}
+	fmt.Println(ColumnsComments("tests", Test{}))
+	// OutPut:
+	// comment on column tests.id is '主键';
+	// comment on column tests.name is '名称';
 }
