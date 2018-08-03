@@ -33,7 +33,6 @@ func init() {
 	}
 }
 
-// ColumnsDefs converts fields and tags in struct into standard posstgresql database statements.
 func ColumnsDefs(strct interface{}) string {
 	var columns []string
 	traverseStructFields(reflect.TypeOf(strct), func(field reflect.StructField) {

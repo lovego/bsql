@@ -11,13 +11,11 @@ import (
 	"github.com/lovego/tracer"
 )
 
-// DB indicates the database to connect to and the timeout.
 type DB struct {
 	db      *sql.DB
 	timeout time.Duration
 }
 
-// DbOrTx declares the query and statement execution functions for DB and TX.
 type DbOrTx interface {
 	Query(data interface{}, sql string, args ...interface{}) error
 	QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error
@@ -25,7 +23,6 @@ type DbOrTx interface {
 	ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error)
 }
 
-// New generates objects that connect to the database.
 func New(db *sql.DB, timeout time.Duration) *DB {
 	if timeout <= 0 {
 		timeout = time.Minute
@@ -33,12 +30,10 @@ func New(db *sql.DB, timeout time.Duration) *DB {
 	return &DB{db, timeout}
 }
 
-// Query executes the sql, scans the results into the data, and returns an error.
 func (db *DB) Query(data interface{}, sql string, args ...interface{}) error {
 	return db.QueryT(db.timeout, data, sql, args...)
 }
 
-// Query executes the sql, sets the timeout, scans the result into data, and returns an error.
 func (db *DB) QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
