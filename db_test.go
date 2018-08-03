@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"github.com/lovego/errs"
 	"github.com/shopspring/decimal"
 )
 
@@ -153,4 +154,15 @@ func getTestDB() *DB {
 		log.Panic(err)
 	}
 	return &DB{db, time.Second}
+}
+
+func ExampleQuery() {
+	var people struct {
+		Name string
+		Age  int
+	}
+	var db *DB
+	if err := db.Query(&people, `select name, age from peoples where id = $1`, 1); err != nil {
+		errs.Trace(err)
+	}
 }
