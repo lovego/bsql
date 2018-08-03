@@ -34,7 +34,7 @@ func New(db *sql.DB, timeout time.Duration) *DB {
 }
 
 // Query executes the sql, scans the results into the data, and returns an error.
-
+//
 // var people struct {
 // 		Name string
 // 		Age  int
