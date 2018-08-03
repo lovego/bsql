@@ -157,6 +157,14 @@ func getTestDB() *DB {
 	return &DB{db, time.Second}
 }
 
+func ExampleNew() {
+	var rawDb *sql.DB
+	db := New(rawDb, time.Second)
+	fmt.Println(db.timeout)
+	// Output:
+	// 1s
+}
+
 func ExampleDB_Query() {
 	var people struct {
 		Name string
