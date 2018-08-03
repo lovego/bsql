@@ -156,7 +156,7 @@ func getTestDB() *DB {
 	return &DB{db, time.Second}
 }
 
-func ExampleQuery() {
+func ExampleQuery_DB() {
 	var people struct {
 		Name string
 		Age  int
