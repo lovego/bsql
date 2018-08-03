@@ -2,13 +2,13 @@ package bsql
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/lib/pq"
-	"github.com/lovego/errs"
 	"github.com/shopspring/decimal"
 )
 
@@ -161,8 +161,18 @@ func ExampleQuery_DB() {
 		Name string
 		Age  int
 	}
-	var db *DB
-	if err := db.Query(&people, `select name, age from peoples where id = $1`, 1); err != nil {
-		errs.Trace(err)
+	Db, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	if err != nil {
+		log.Panic(err)
 	}
+	var db = &DB{
+		db:      Db,
+		timeout: time.Second,
+	}
+	if err := db.Query(&people, `select 'jack' as name, 24 as age`); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(people)
+	// Output:
+	// {jack 24}
 }

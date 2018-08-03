@@ -58,6 +58,30 @@ func ExampleJsonArray() {
 	// '[[1,"a",true],[2,"b",true],[3,"c",false],[4,"dd''ee",false]]'
 }
 
+func ExampleSliceContents() {
+	data1 := []interface{}{"jack", "rose", 1}
+	fmt.Println(SliceContents(reflect.ValueOf(data1)))
+
+	type people struct {
+		Name string `json:"name"`
+		Age  int    `json:"age"`
+	}
+	data2 := []people{
+		{Name: "李雷", Age: 20},
+		{Name: "韩梅梅", Age: 19},
+	}
+	fmt.Println(SliceContents(reflect.ValueOf(data2)))
+	data3 := []*people{
+		{Name: "李雷", Age: 20},
+		{Name: "韩梅梅", Age: 19},
+	}
+	fmt.Println(SliceContents(reflect.ValueOf(data3)))
+	// Output:
+	// 'jack','rose',1
+	// '{"name":"李雷","age":20}','{"name":"韩梅梅","age":19}'
+	// '{"name":"李雷","age":20}','{"name":"韩梅梅","age":19}'
+}
+
 func ExampleStructValues() {
 	type student struct {
 		Id        int
@@ -84,6 +108,25 @@ func ExampleStructValues() {
 	// (1,'李雷'),(2,'韩梅梅'),(3,'Lili'),(4,'Lucy')
 	// (1,'李雷'),(2,'韩梅梅'),(3,'Lili'),(4,'Lucy')
 	// (1,'李雷'),(2,'韩梅梅'),(3,'Lili'),(4,'Lucy')
+}
+
+func ExampleStructValuesIn() {
+	type student struct {
+		Id        int
+		Name, Sex string
+	}
+	data1 := student{1, "李雷", "男"}
+	fmt.Println(StructValuesIn(reflect.ValueOf(data1), []string{"Id", "Name"}))
+
+	data2 := &student{1, "李雷", "男"}
+	fmt.Println(StructValuesIn(reflect.ValueOf(data2), []string{"Id", "Name"}))
+
+	var data3 interface{} = student{1, "李雷", "男"}
+	fmt.Println(StructValuesIn(reflect.ValueOf(data3), []string{"Id", "Name"}))
+	// Output:
+	// (1,'李雷')
+	// (1,'李雷')
+	// (1,'李雷')
 }
 
 func ExampleV() {
