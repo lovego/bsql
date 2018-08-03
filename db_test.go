@@ -1,6 +1,7 @@
 package bsql
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -175,4 +176,142 @@ func ExampleDB_Query() {
 	fmt.Println(people)
 	// Output:
 	// {jack 24}
+}
+
+func ExampleDB_QueryT() {
+	var people struct {
+		Name string
+		Age  int
+	}
+	Db, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	if err != nil {
+		log.Panic(err)
+	}
+	var db = &DB{
+		db:      Db,
+		timeout: time.Second,
+	}
+	if err := db.QueryT(2*time.Second, &people, `select 'jack' as name, 24 as age`); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(people)
+	// Output:
+	// {jack 24}
+}
+
+func ExampleDB_QueryCtx() {
+	var people struct {
+		Name string
+		Age  int
+	}
+	Db, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	if err != nil {
+		log.Panic(err)
+	}
+	var db = &DB{
+		db:      Db,
+		timeout: time.Second,
+	}
+	if err := db.QueryCtx(
+		context.Background(), `query people`, &people, `select 'jack' as name, 24 as age`,
+	); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(people)
+	// Output:
+	// {jack 24}
+}
+
+func ExampleDB_Exec() {
+	Db, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	if err != nil {
+		log.Panic(err)
+	}
+	var db = &DB{
+		db:      Db,
+		timeout: time.Second,
+	}
+	if _, err := db.Exec(`delete from people where id = $1`, 1); err != nil {
+		log.Panic(err)
+	}
+}
+
+func ExampleDB_ExecT() {
+	Db, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	if err != nil {
+		log.Panic(err)
+	}
+	var db = &DB{
+		db:      Db,
+		timeout: time.Second,
+	}
+	if _, err := db.ExecT(5*time.Second, `delete from people where id = $1`, 1); err != nil {
+		log.Panic(err)
+	}
+}
+
+func ExampleDB_ExecCtx() {
+	Db, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	if err != nil {
+		log.Panic(err)
+	}
+	var db = &DB{
+		db:      Db,
+		timeout: time.Second,
+	}
+	if _, err := db.ExecCtx(
+		context.Background(), `delete people`, `delete from people where id = $1`, 1,
+	); err != nil {
+		log.Panic(err)
+	}
+}
+
+func ExampleDB_RunInTransaction() {
+	Db, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	if err != nil {
+		log.Panic(err)
+	}
+	var db = &DB{
+		db:      Db,
+		timeout: time.Second,
+	}
+	if err := db.RunInTransaction(func(*Tx) error {
+		return nil
+	}); err != nil {
+		log.Panic(err)
+	}
+}
+
+func ExampleDB_RunInTransactionT() {
+	Db, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	if err != nil {
+		log.Panic(err)
+	}
+	var db = &DB{
+		db:      Db,
+		timeout: time.Second,
+	}
+	if err := db.RunInTransactionT(5*time.Second, func(*Tx) error {
+		return nil
+	}); err != nil {
+		log.Panic(err)
+	}
+}
+
+func ExampleDB_RunInTransactionCtx() {
+	Db, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	if err != nil {
+		log.Panic(err)
+	}
+	var db = &DB{
+		db:      Db,
+		timeout: time.Second,
+	}
+	if err := db.RunInTransactionCtx(
+		context.Background(), "test RunInTransactionCtx", func(*Tx, context.Context) error {
+			return nil
+		},
+	); err != nil {
+		log.Panic(err)
+	}
 }
