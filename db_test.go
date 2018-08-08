@@ -1,7 +1,9 @@
 package bsql
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"reflect"
 	"testing"
@@ -153,4 +155,250 @@ func getTestDB() *DB {
 		log.Panic(err)
 	}
 	return &DB{db, time.Second}
+}
+
+func ExampleNew() {
+	var rawDb *sql.DB
+	db := New(rawDb, time.Second)
+	fmt.Println(db.timeout)
+	// Output:
+	// 1s
+}
+
+func ExampleDB_Query() {
+	var people struct {
+		Name string
+		Age  int
+	}
+	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	defer rawDb.Close()
+	if err != nil {
+		log.Panic(err)
+	}
+	db := New(rawDb, time.Second)
+	if err := db.Query(&people, `select 'jack' as name, 24 as age`); err != nil {
+		log.Panic(err)
+	}
+	fmt.Printf("%+v", people)
+	// Output:
+	// {Name:jack Age:24}
+}
+
+func ExampleDB_QueryT() {
+	var people struct {
+		Name string
+		Age  int
+	}
+	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	defer rawDb.Close()
+	if err != nil {
+		log.Panic(err)
+	}
+	db := New(rawDb, time.Second)
+	if err := db.QueryT(2*time.Second, &people, `select 'jack' as name, 24 as age`); err != nil {
+		log.Panic(err)
+	}
+	fmt.Printf("%+v", people)
+	// Output:
+	// {Name:jack Age:24}
+}
+
+func ExampleDB_QueryCtx() {
+	var people struct {
+		Name string
+		Age  int
+	}
+	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	defer rawDb.Close()
+	if err != nil {
+		log.Panic(err)
+	}
+	db := New(rawDb, time.Second)
+	if err := db.QueryCtx(
+		context.Background(), `query people`, &people, `select 'jack' as name, 24 as age`,
+	); err != nil {
+		log.Panic(err)
+	}
+	fmt.Printf("%+v", people)
+	// Output:
+	// {Name:jack Age:24}
+}
+
+func ExampleDB_Exec() {
+	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	defer rawDb.Close()
+	if err != nil {
+		log.Panic(err)
+	}
+	db := New(rawDb, time.Second)
+	result, err := db.Exec(`
+		drop table if exists students;
+		create table if not exists students (
+			id         bigserial,
+			name       varchar(50),
+			friend_ids bigint[],
+			scores     json,
+			status     smallint,
+			created_at timestamptz,
+			updated_at timestamptz default '0001-01-01Z'
+		);
+		insert into students (
+			name, friend_ids, scores, status, created_at
+		) values (
+			'jack', array[55,66], '{"数学":100, "语文":90}', 0, now()
+		);
+	`)
+	if err != nil {
+		log.Panic(err)
+	}
+	affectedRows, err := result.RowsAffected()
+	if err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(affectedRows)
+	// Output:
+	// 1
+}
+
+func ExampleDB_ExecT() {
+	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	defer rawDb.Close()
+	if err != nil {
+		log.Panic(err)
+	}
+	db := New(rawDb, time.Second)
+	result, err := db.ExecT(time.Second, `
+		drop table if exists students;
+		create table if not exists students (
+			id         bigserial,
+			name       varchar(50),
+			friend_ids bigint[],
+			scores     json,
+			status     smallint,
+			created_at timestamptz,
+			updated_at timestamptz default '0001-01-01Z'
+		);
+		insert into students (
+			name, friend_ids, scores, status, created_at
+		) values (
+			'jack', array[55,66], '{"数学":100, "语文":90}', 0, now()
+		),(
+			'rose', array[99,88], '{"数学":90, "语文":100}', 0, now()
+		);
+	`)
+	if err != nil {
+		log.Panic(err)
+	}
+	affectedRows, err := result.RowsAffected()
+	if err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(affectedRows)
+	// Output:
+	// 2
+}
+
+func ExampleDB_ExecCtx() {
+	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	defer rawDb.Close()
+	if err != nil {
+		log.Panic(err)
+	}
+	db := New(rawDb, time.Second)
+	result, err := db.ExecCtx(
+		context.Background(), `delete people`, `
+		drop table if exists students;
+		create table if not exists students (
+			id         bigserial,
+			name       varchar(50),
+			friend_ids bigint[],
+			scores     json,
+			status     smallint,
+			created_at timestamptz,
+			updated_at timestamptz default '0001-01-01Z'
+		);
+		insert into students (
+			name, friend_ids, scores, status, created_at
+		) values (
+			'jack', array[55,66], '{"数学":100, "语文":90}', 0, now()
+		),(
+			'rose', array[99,88], '{"数学":90, "语文":100}', 0, now()
+		);
+	`)
+	if err != nil {
+		log.Panic(err)
+	}
+	affectedRows, err := result.RowsAffected()
+	if err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(affectedRows)
+	// Output:
+	// 2
+}
+
+func ExampleDB_RunInTransaction() {
+	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	defer rawDb.Close()
+	if err != nil {
+		log.Panic(err)
+	}
+	db := New(rawDb, time.Second)
+	var id int
+	if err := db.RunInTransaction(func(tx *Tx) error {
+		if err := tx.Query(&id, `select 10 as id`); err != nil {
+			return err
+		}
+		return nil
+		return nil
+	}); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(id)
+	// Output:
+	// 10
+}
+
+func ExampleDB_RunInTransactionT() {
+	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	defer rawDb.Close()
+	if err != nil {
+		log.Panic(err)
+	}
+	db := New(rawDb, time.Second)
+	var id int
+	if err := db.RunInTransactionT(5*time.Second, func(tx *Tx) error {
+		if err := tx.Query(&id, `select 10 as id`); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(id)
+	// Output:
+	// 10
+}
+
+func ExampleDB_RunInTransactionCtx() {
+	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	defer rawDb.Close()
+	if err != nil {
+		log.Panic(err)
+	}
+	db := New(rawDb, time.Second)
+	var id int
+	if err := db.RunInTransactionCtx(
+		context.Background(), "test RunInTransactionCtx", func(tx *Tx, ctx context.Context) error {
+			if err := tx.Query(&id, `select 10 as id`); err != nil {
+				return err
+			}
+			return nil
+		},
+	); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(id)
+	// Output:
+	// 10
 }
