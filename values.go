@@ -12,7 +12,8 @@ import (
 	"github.com/lib/pq"
 )
 
-// Quote string
+// Q Quote a string
+// maybe we should check it's valid utf8 string.
 func Q(q string) string {
 	return "'" + strings.Replace(q, "'", "''", -1) + "'"
 }
