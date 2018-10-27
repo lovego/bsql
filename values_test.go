@@ -8,7 +8,7 @@ import (
 )
 
 func ExampleQ() {
-	var data = []string{"bsql", "xi'ao'mei", "love'go"}
+	var data = []string{"bsql", "xi'ao'mei", "love'go", "a\000\000b\000c"}
 	for i := range data {
 		fmt.Println(Q(data[i]))
 	}
@@ -16,6 +16,7 @@ func ExampleQ() {
 	// 'bsql'
 	// 'xi''ao''mei'
 	// 'love''go'
+	// 'abc'
 }
 
 func ExampleValues() {

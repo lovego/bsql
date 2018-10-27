@@ -12,10 +12,11 @@ import (
 	"github.com/lib/pq"
 )
 
-// Q Quote a string
-// maybe we should check it's valid utf8 string.
-func Q(q string) string {
-	return "'" + strings.Replace(q, "'", "''", -1) + "'"
+// Q quote a string, removing all zero byte('\000') in it.
+func Q(s string) string {
+	s = strings.Replace(s, "'", "''", -1)
+	s = strings.Replace(s, "\000", "", -1)
+	return "'" + s + "'"
 }
 
 func Array(data interface{}) string {
