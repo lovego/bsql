@@ -16,9 +16,9 @@ func ExampleColumnsDefs() {
 		Cities    []string
 		Scores    map[string]int
 		Money     decimal.Decimal
-		Status    int8 `sql:"default 0"`
+		Status    **int8 `sql:"default 0"`
 		CreatedAt time.Time
-		UpdatedAt time.Time
+		UpdatedAt *time.Time
 	}
 
 	fmt.Println(ColumnsDefs(Student{}))

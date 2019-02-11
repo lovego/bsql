@@ -83,7 +83,7 @@ func hasPrimaryKeyConstraint(s string) bool {
 
 func getColumnType(field reflect.StructField) string {
 	typ := field.Type
-	if typ.Kind() == reflect.Ptr {
+	for typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
 	switch typ.Kind() {
