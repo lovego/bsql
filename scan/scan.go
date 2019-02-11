@@ -1,4 +1,4 @@
-package bsql
+package scan
 
 import (
 	"database/sql"
@@ -6,15 +6,7 @@ import (
 	"reflect"
 )
 
-type rowsType interface {
-	ColumnTypes() ([]*sql.ColumnType, error)
-	Columns() ([]string, error)
-	Next() bool
-	Scan(dest ...interface{}) error
-	Err() error
-}
-
-func scan(rows rowsType, data interface{}) error {
+func Scan(rows *sql.Rows, data interface{}) error {
 	if _, ok := data.(sql.Scanner); ok {
 		if rows.Next() {
 			if err := rows.Scan(data); err != nil {
@@ -27,6 +19,9 @@ func scan(rows rowsType, data interface{}) error {
 	ptr := reflect.ValueOf(data)
 	if ptr.Kind() != reflect.Ptr {
 		return errors.New("bsql: data must be a pointer.")
+	}
+	if ptr.IsNil() {
+		return errors.New("bsql: data is a nil pointer.")
 	}
 	columns, err := getColumns(rows)
 	if err != nil {
@@ -57,7 +52,7 @@ func scan(rows rowsType, data interface{}) error {
 	return rows.Err()
 }
 
-func scan2Slice(rows rowsType, columns []columnType, targets, targetsPtr reflect.Value) error {
+func scan2Slice(rows *sql.Rows, columns []columnType, targets, targetsPtr reflect.Value) error {
 	elemType := targets.Type().Elem()
 	var isPtr bool
 	if elemType.Kind() == reflect.Ptr {
@@ -82,7 +77,7 @@ func scan2Slice(rows rowsType, columns []columnType, targets, targetsPtr reflect
 	return nil
 }
 
-func scan2Struct(rows rowsType, columns []columnType, target reflect.Value) error {
+func scan2Struct(rows *sql.Rows, columns []columnType, target reflect.Value) error {
 	var scanners []interface{}
 	for _, column := range columns {
 		field := target.FieldByName(column.FieldName)
@@ -95,38 +90,4 @@ func scan2Struct(rows rowsType, columns []columnType, target reflect.Value) erro
 		return err
 	}
 	return nil
-}
-
-type columnType struct {
-	FieldName string
-	*sql.ColumnType
-}
-
-func getColumns(rows rowsType) ([]columnType, error) {
-	columnTypes, err := rows.ColumnTypes()
-	if err != nil {
-		return nil, err
-	}
-	if len(columnTypes) == 0 { // for unit test
-		return getColumnsFromNames(rows)
-	}
-	var columns []columnType
-	for _, colType := range columnTypes {
-		columns = append(columns, columnType{
-			FieldName: Column2Field(colType.Name()), ColumnType: colType,
-		})
-	}
-	return columns, nil
-}
-
-func getColumnsFromNames(rows rowsType) ([]columnType, error) {
-	columnNames, err := rows.Columns()
-	if err != nil {
-		return nil, err
-	}
-	var columns []columnType
-	for _, columnName := range columnNames {
-		columns = append(columns, columnType{FieldName: Column2Field(columnName)})
-	}
-	return columns, nil
 }

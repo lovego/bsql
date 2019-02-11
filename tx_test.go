@@ -26,7 +26,7 @@ func TestRunInTransactionAndTx(t *testing.T) {
 
 func runTests(t *testing.T, db DbOrTx) {
 	createTable(t, db)
-	var expects = testStudents()
+	var expects = getTestStudents()
 	// Rows
 	var gots []Student
 	var fields = FieldsFromStruct(Student{}, []string{"UpdatedAt"})

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/lovego/bsql/scan"
 	"github.com/lovego/tracer"
 )
 
@@ -65,7 +66,7 @@ func (db *DB) query(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	return scan(rows, data)
+	return scan.Scan(rows, data)
 }
 
 func (db *DB) Exec(sql string, args ...interface{}) (sql.Result, error) {

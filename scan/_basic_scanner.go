@@ -1,13 +1,66 @@
-package bsql
+package scan
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
+	"time"
 )
 
-func scanInt(d *int, src interface{}) error {
-	switch s := src.(type) {
+type basicScanner struct {
+	dest reflect.Value
+}
+
+/*
+The src value will be of one of the following types:
+   int64
+   float64
+   bool
+   []byte
+   string
+   time.Time
+   nil - for NULL values
+*/
+func (bs *basicScanner) Scan(src interface{}) error {
+	switch buf := src.(type) {
 	case int64:
+		// setInt(src, getRealDest(bs.dest))
+	case float64:
+	case bool:
+	case []byte:
+	case string:
+	case time.Time:
+	case nil:
+		// if src is null, should set dest to it's zero value.
+		// eg. when dest is int, should set it to 0.
+		bs.dest.Set(reflect.Zero(bs.dest.Type()))
+		return nil
+	default:
+		return fmt.Errorf("bsql basicScanner unexpected src: %T(%v)", src, src)
+	}
+}
+
+// the preceding steps ensured that dest is valid
+func getRealDest(dest reflect.Value) reflect.Value {
+	for dest.Kind() == reflect.Ptr {
+		if dest.IsNil() {
+			dest.Set(reflect.New(dest.Type().Elem()))
+		}
+		dest = dest.Elem()
+	}
+	return dest
+}
+
+// use reflect.Value's  SetXXX methods instead of pointers and type switch,
+// because we should set by kind, not type.
+func setInt(src int64, dest reflect.Value) error {
+	switch dest.Kind() {
+	case reflect.Int64, reflect.Uint64:
+		dest.SetInt(src)
+	case reflect.Int32:
+	case reflect.Uint32:
+		dest.SetInt(src)
+
 		if i := int(s); int64(i) == s {
 			*d = i
 		} else {
@@ -16,7 +69,7 @@ func scanInt(d *int, src interface{}) error {
 	case nil:
 		*d = 0
 	default:
-		return fmt.Errorf("bsql: cannot assign %T(%v) to int", src, src)
+		return fmt.Errorf("bsql: cannot assign int(%v) to %T", src, src)
 	}
 	return nil
 }
@@ -209,6 +262,58 @@ func scanFloat64(d *float64, src interface{}) error {
 		*d = 0
 	default:
 		return fmt.Errorf("bsql: cannot assign %T(%v) to float64", src, src)
+	}
+	return nil
+}
+
+func scanBool(d *bool, src interface{}) error {
+	switch s := src.(type) {
+	case bool:
+		*d = s
+	case nil:
+		*d = false
+	default:
+		return fmt.Errorf("bsql: cannot assign %T(%v) to bool", src, src)
+	}
+	return nil
+}
+
+func scanBytes(d *[]byte, src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*d = s
+	case string:
+		*d = []byte(s)
+	case nil:
+		*d = nil
+	default:
+		return fmt.Errorf("bsql: cannot assign %T(%v) to []byte", src, src)
+	}
+	return nil
+}
+
+func scanString(d *string, src interface{}) error {
+	switch s := src.(type) {
+	case string:
+		*d = s
+	case []byte:
+		*d = string(s)
+	case nil:
+		*d = ""
+	default:
+		return fmt.Errorf("bsql: cannot assign %T(%v) to string", src, src)
+	}
+	return nil
+}
+
+func scanTime(d *time.Time, src interface{}) error {
+	switch s := src.(type) {
+	case time.Time:
+		*d = s
+	case nil:
+		*d = time.Time{}
+	default:
+		return fmt.Errorf("bsql: cannot assign %T(%v) to time.Time", src, src)
 	}
 	return nil
 }

@@ -1,43 +1,12 @@
 package bsql
 
 import (
-	"database/sql/driver"
-	"encoding/json"
 	"log"
 	"reflect"
-	"strconv"
 	"strings"
-	"time"
-
-	"github.com/lib/pq"
 )
 
-// Q quote a string, removing all zero byte('\000') in it.
-func Q(s string) string {
-	s = strings.Replace(s, "'", "''", -1)
-	s = strings.Replace(s, "\000", "", -1)
-	return "'" + s + "'"
-}
-
-func Array(data interface{}) string {
-	v, err := pq.Array(data).Value()
-	if err != nil {
-		log.Panic("bsql Array: ", err)
-	}
-	if v == nil {
-		return "'{}'"
-	}
-	return "'" + strings.Replace(v.(string), "'", "''", -1) + "'"
-}
-
-func JsonArray(data interface{}) string {
-	b, err := json.Marshal(data)
-	if err != nil {
-		log.Panic("bsql JsonArray: ", err)
-	}
-	return "'" + strings.Replace(string(b), "'", "''", -1) + "'"
-}
-
+// Values return the contents following the sql keyword "values"
 func Values(data interface{}) string {
 	value := reflect.ValueOf(data)
 	switch value.Kind() {
@@ -95,74 +64,6 @@ func StructValuesIn(value reflect.Value, fields []string) string {
 		slice = append(slice, V(field.Interface()))
 	}
 	return "(" + strings.Join(slice, ",") + ")"
-}
-
-func V(i interface{}) string {
-	switch v := i.(type) {
-	case string:
-		return Q(v)
-	case bool:
-		if v {
-			return "true"
-		} else {
-			return "false"
-		}
-	case int:
-		return strconv.FormatInt(int64(v), 10)
-	case int8:
-		return strconv.FormatInt(int64(v), 10)
-	case int16:
-		return strconv.FormatInt(int64(v), 10)
-	case int32:
-		return strconv.FormatInt(int64(v), 10)
-	case int64:
-		return strconv.FormatInt(v, 10)
-	case uint:
-		return strconv.FormatUint(uint64(v), 10)
-	case uint8:
-		return strconv.FormatUint(uint64(v), 10)
-	case uint16:
-		return strconv.FormatUint(uint64(v), 10)
-	case uint32:
-		return strconv.FormatUint(uint64(v), 10)
-	case uint64:
-		return strconv.FormatUint(v, 10)
-	case float32:
-		return strconv.FormatFloat(float64(v), 'G', -1, 32)
-	case float64:
-		return strconv.FormatFloat(v, 'G', -1, 64)
-	case nil:
-		return "NULL"
-	case []byte:
-		return string(v)
-	case time.Time:
-		return "'" + v.Format(time.RFC3339Nano) + "'"
-	case driver.Valuer:
-		return valuer(v)
-	default:
-		buf, err := json.Marshal(v)
-		if err != nil {
-			log.Panic("bsql json.Marshal: ", err)
-		}
-		return Q(string(buf))
-	}
-}
-
-func valuer(v driver.Valuer) string {
-	ifc, err := v.Value()
-	if err != nil {
-		log.Panic("bsql valuer: ", err)
-	}
-	switch s := ifc.(type) {
-	case string:
-		if _, err := strconv.ParseFloat(s, 64); err == nil {
-			return s
-		} else {
-			return "'" + s + "'"
-		}
-	default:
-		return V(ifc)
-	}
 }
 
 func structField(strct reflect.Value, fieldName string) reflect.Value {

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"reflect"
 	"testing"
 	"time"
 
@@ -29,7 +28,7 @@ type timeFields struct {
 	UpdatedAt time.Time
 }
 
-func testStudents() []Student {
+func getTestStudents() []Student {
 	rows := []Student{{
 		Id: 1, Name: "李雷", FriendIds: []int64{2}, Cities: []string{"成都", "北京"},
 		Scores: map[string]int{"语文": 95, "英语": 97},
@@ -71,82 +70,6 @@ func TestDB(t *testing.T) {
 	db := getTestDB()
 	defer db.db.Close()
 	runTests(t, db)
-}
-
-func TestScanArray(t *testing.T) {
-	db := getTestDB()
-	defer db.db.Close()
-	var ints pq.Int64Array
-	if err := db.Query(&ints, `select '{1,2,3}'::int[] as slice`); err != nil {
-		t.Error(err)
-	}
-	if !reflect.DeepEqual(ints, pq.Int64Array([]int64{1, 2, 3})) {
-		t.Errorf("unexpected: %v", ints)
-	}
-
-	var strs struct {
-		Slice []string
-	}
-	if err := db.Query(&strs, `select '{"abc","de''f"}'::text[] as slice`); err != nil {
-		t.Error(err)
-	}
-	if !reflect.DeepEqual(strs.Slice, []string{"abc", "de'f"}) {
-		t.Errorf("unexpected: %v", strs.Slice)
-	}
-}
-
-func TestScanNil(t *testing.T) {
-	db := getTestDB()
-	defer db.db.Close()
-
-	var i = 3
-	if err := db.Query(&i, `select null`); err != nil {
-		t.Error(err)
-	}
-	if i != 0 {
-		t.Errorf("unexpected: %v", i)
-	}
-
-	var ints pq.Int64Array
-	if err := db.Query(&ints, `select null`); err != nil {
-		t.Error(err)
-	}
-	if len(ints) != 0 {
-		t.Errorf("unexpected: %v", ints)
-	}
-
-	ints = pq.Int64Array{1}
-	if err := db.Query(&ints, `select null`); err != nil {
-		t.Error(err)
-	}
-	if len(ints) != 0 {
-		t.Errorf("unexpected: %v", ints)
-	}
-}
-
-func TestScanValueOutOfRange(t *testing.T) {
-	db := getTestDB()
-	defer db.db.Close()
-
-	var i int8
-	if err := db.Query(&i, `select 128`); err == nil {
-		t.Error("expect error")
-	} else {
-		t.Log(err)
-	}
-}
-
-func TestScanFloat(t *testing.T) {
-	db := getTestDB()
-	defer db.db.Close()
-
-	var f float32
-	if err := db.Query(&f, `select 1.23`); err != nil {
-		t.Fatal(err)
-	}
-	if f != 1.23 {
-		t.Errorf("unexpected: %v", f)
-	}
 }
 
 func getTestDB() *DB {

@@ -5,16 +5,9 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/lovego/bsql/scan"
 	"github.com/lovego/struct_tag"
 )
-
-func Column2Field(column string) string {
-	var parts []string
-	for _, part := range strings.Split(column, "_") {
-		parts = append(parts, strings.Title(part))
-	}
-	return strings.Join(parts, "")
-}
 
 /* 单词边界有两种
 1. 非大写字符，且下一个是大写字符
@@ -46,7 +39,7 @@ func Field2Column(str string) string {
 
 func Columns2Fields(columns []string) (result []string) {
 	for _, column := range columns {
-		result = append(result, Column2Field(column))
+		result = append(result, scan.Column2Field(column))
 	}
 	return result
 }

@@ -3,21 +3,7 @@ package bsql
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/shopspring/decimal"
 )
-
-func ExampleQ() {
-	var data = []string{"bsql", "xi'ao'mei", "love'go", "a\000\000b\000c"}
-	for i := range data {
-		fmt.Println(Q(data[i]))
-	}
-	// Output:
-	// 'bsql'
-	// 'xi''ao''mei'
-	// 'love''go'
-	// 'abc'
-}
 
 func ExampleValues() {
 	fmt.Println(Values(3))
@@ -33,30 +19,6 @@ func ExampleValues() {
 	// (1,2,3)
 	// ('a','b','c')
 	// (1,'a',true),(2,'b',true),(3,'c',false)
-}
-
-func ExampleArray() {
-	fmt.Println(Array([]int{1, 2, 3}))
-	fmt.Println(Array([]string{"a", "b", "c"}))
-	fmt.Println(Array([][]interface{}{
-		{1, "a", true}, {2, "b", true}, {3, "c", false}, {4, "dd'ee", false},
-	}))
-	// Output:
-	// '{1,2,3}'
-	// '{"a","b","c"}'
-	// '{{1,"a",true},{2,"b",true},{3,"c",false},{4,"dd''ee",false}}'
-}
-
-func ExampleJsonArray() {
-	fmt.Println(JsonArray([]int{1, 2, 3}))
-	fmt.Println(JsonArray([]string{"a", "b", "c"}))
-	fmt.Println(JsonArray([][]interface{}{
-		{1, "a", true}, {2, "b", true}, {3, "c", false}, {4, "dd'ee", false},
-	}))
-	// Output:
-	// '[1,2,3]'
-	// '["a","b","c"]'
-	// '[[1,"a",true],[2,"b",true],[3,"c",false],[4,"dd''ee",false]]'
 }
 
 func ExampleSliceContents() {
@@ -128,18 +90,6 @@ func ExampleStructValuesIn() {
 	// (1,'李雷')
 	// (1,'李雷')
 	// (1,'李雷')
-}
-
-func ExampleV() {
-	fmt.Println(V(1.23))
-	fmt.Println(V(float64(1.23)))
-	fmt.Println(V(decimal.New(1230, -2)))
-	fmt.Println(V(map[int]bool{2: true, 3: false}))
-	// Output:
-	// 1.23
-	// 1.23
-	// 12.3
-	// '{"2":true,"3":false}'
 }
 
 func ExampleStructField() {

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/lovego/bsql/scan"
 	"github.com/lovego/tracer"
 )
 
@@ -48,7 +49,7 @@ func (tx *Tx) query(ctx context.Context, data interface{}, sql string, args []in
 	if err != nil {
 		return err
 	}
-	return scan(rows, data)
+	return scan.Scan(rows, data)
 }
 
 func (tx *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
