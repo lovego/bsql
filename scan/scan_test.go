@@ -130,9 +130,17 @@ func ExampleScan_intPointer() {
 		log.Panic(err)
 	}
 	fmt.Println(pointer)
+
+	var p **int
+	if err := Scan(getTestIntValues(), &p); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(**p)
+
 	// Output:
 	// 9
 	// <nil>
+	// 9
 }
 
 func ExampleScan_intValueOutOfRange() {

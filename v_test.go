@@ -54,8 +54,9 @@ func ExampleV_string() {
 
 func ExampleV_int() {
 	var i = -1234567890
-	fmt.Println(V(i), V(&i))
-	// Output: -1234567890 -1234567890
+	var p = &i
+	fmt.Println(V(i), V(p), V(&p))
+	// Output: -1234567890 -1234567890 -1234567890
 }
 
 func ExampleV_uint() {
