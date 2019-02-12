@@ -14,5 +14,4 @@ Now only postgresql is supported.
 [https://godoc.org/github.com/lovego/bsql](https://godoc.org/github.com/lovego/bsql)
 
 ### TODO
-1. struct "pg:,array" tag支持
-2. struct embeded struct pointer支持
+1. struct embeded struct pointer支持
