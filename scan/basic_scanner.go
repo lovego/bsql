@@ -72,36 +72,43 @@ func scanInt(src int64, dest reflect.Value) error {
 		maxUint8 = 1<<8 - 1
 	)
 	switch dest.Kind() {
-	case reflect.Int64, reflect.Uint64, reflect.Int, reflect.Uint:
-		// ignore 32 bit machine
+	case reflect.Int64, reflect.Int: // ignore 32 bit machine
+		dest.SetInt(src)
+	case reflect.Uint64, reflect.Uint:
+		dest.SetUint(uint64(src))
 	case reflect.Int32:
 		if src < minInt32 || src > maxInt32 {
 			return errorValueOutOfRange(src, dest)
 		}
+		dest.SetInt(src)
 	case reflect.Uint32:
 		if src < 0 || src > maxUint32 {
 			return errorValueOutOfRange(src, dest)
 		}
+		dest.SetUint(uint64(src))
 	case reflect.Int16:
 		if src < minInt16 || src > maxInt16 {
 			return errorValueOutOfRange(src, dest)
 		}
+		dest.SetInt(src)
 	case reflect.Uint16:
 		if src < 0 || src > maxUint16 {
 			return errorValueOutOfRange(src, dest)
 		}
+		dest.SetUint(uint64(src))
 	case reflect.Int8:
 		if src < minInt8 || src > maxInt8 {
 			return errorValueOutOfRange(src, dest)
 		}
+		dest.SetInt(src)
 	case reflect.Uint8:
 		if src < 0 || src > maxUint8 {
 			return errorValueOutOfRange(src, dest)
 		}
+		dest.SetUint(uint64(src))
 	default:
 		return errorCannotAssign(src, dest)
 	}
-	dest.SetInt(src)
 	return nil
 }
 

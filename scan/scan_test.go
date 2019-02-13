@@ -86,16 +86,16 @@ func ExampleScan_structSlice() {
 }
 
 func ExampleScan_string() {
-	var value string
-	if err := Scan(getTestRows(`select 'abc'`), &value); err != nil {
+	var s string
+	if err := Scan(getTestRows(`select 'abc'`), &s); err != nil {
 		log.Panic(err)
 	}
-	fmt.Println(value)
+	fmt.Println(s)
 
-	if err := Scan(getTestNull(), &value); err != nil {
+	if err := Scan(getTestNull(), &s); err != nil {
 		log.Panic(err)
 	}
-	fmt.Printf("'%s'\n", value)
+	fmt.Printf("'%s'\n", s)
 
 	// Output:
 	// abc
@@ -127,16 +127,33 @@ func ExampleScan_stringPointer() {
 }
 
 func ExampleScan_int() {
-	var value int
-	if err := Scan(getTestIntValues(), &value); err != nil {
+	var i int
+	if err := Scan(getTestIntValues(), &i); err != nil {
 		log.Panic(err)
 	}
-	fmt.Println(value)
+	fmt.Println(i)
 
-	if err := Scan(getTestNull(), &value); err != nil {
+	if err := Scan(getTestNull(), &i); err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(value)
+	fmt.Println(i)
+
+	// Output:
+	// 9
+	// 0
+}
+
+func ExampleScan_uint() {
+	var i uint
+	if err := Scan(getTestIntValues(), &i); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(i)
+
+	if err := Scan(getTestNull(), &i); err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(i)
 
 	// Output:
 	// 9
@@ -168,8 +185,8 @@ func ExampleScan_intPointer() {
 }
 
 func ExampleScan_intValueOutOfRange() {
-	var value int8
-	if err := Scan(getTestRows(`select 128`), &value); err != nil {
+	var i int8
+	if err := Scan(getTestRows(`select 128`), &i); err != nil {
 		fmt.Println(err)
 	}
 	// Output:
@@ -177,25 +194,25 @@ func ExampleScan_intValueOutOfRange() {
 }
 
 func ExampleScan_intSlice() {
-	var values []int
-	if err := Scan(getTestIntValues(), &values); err != nil {
+	var a []int
+	if err := Scan(getTestIntValues(), &a); err != nil {
 		log.Panic(err)
 	}
-	fmt.Println(values)
+	fmt.Println(a)
 	// Output: [9 99 999]
 }
 
 func ExampleScan_pqInt64Array() {
-	var values pq.Int64Array
-	if err := Scan(getTestRows(`select '{9,99,999}'::int[]`), &values); err != nil {
+	var a pq.Int64Array
+	if err := Scan(getTestRows(`select '{9,99,999}'::int[]`), &a); err != nil {
 		log.Panic(err)
 	}
-	fmt.Println(values)
+	fmt.Println(a)
 
-	if err := Scan(getTestNull(), &values); err != nil {
+	if err := Scan(getTestNull(), &a); err != nil {
 		log.Panic(err)
 	}
-	fmt.Println(values)
+	fmt.Println(a)
 	// Output:
 	// [9 99 999]
 	// []
@@ -208,6 +225,21 @@ func ExampleScan_float() {
 	}
 	fmt.Println(f)
 	// Output: 1.23
+}
+
+func ExampleScan_bool() {
+	var b bool
+	if err := Scan(getTestRows(`select true`), &b); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(b)
+	if err := Scan(getTestNull(), &b); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(b)
+	// Output:
+	// true
+	// false
 }
 
 func ExampleScan_time() {
