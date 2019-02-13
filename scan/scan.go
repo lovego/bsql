@@ -4,8 +4,14 @@ import (
 	"database/sql"
 	"errors"
 	"reflect"
+	"time"
 )
 
+// data must be a sql.Scanner or a non nil pointer.
+// If data a pointer, it's indirect once to get the target to store rows from database.
+// And it's indirect only once, we cann't indirect all pointer until non pointer type,
+// because nil value should be set to the second layer pointer, not the non pointer type.
+// If target is a slice, it scan all rows into the slice, otherwise it scan a single row.
 func Scan(rows *sql.Rows, data interface{}) error {
 	if _, ok := data.(sql.Scanner); ok {
 		if rows.Next() {
@@ -30,21 +36,21 @@ func Scan(rows *sql.Rows, data interface{}) error {
 	if len(columns) == 0 {
 		return errors.New("bsql: no columns.")
 	}
+
 	target := ptr.Elem()
 	switch target.Kind() {
-	case reflect.Slice, reflect.Array:
-		if err := scan2Slice(rows, columns, target, ptr); err != nil {
-			return err
-		}
-	case reflect.Struct:
-		if rows.Next() {
-			if err := scan2Struct(rows, columns, target); err != nil {
+	case reflect.Slice:
+		typ := target.Type().Elem()
+		for rows.Next() {
+			elem := reflect.New(typ).Elem()
+			if err := scanSingleRow(rows, columns, elem); err != nil {
 				return err
 			}
+			target.Set(reflect.Append(target, elem))
 		}
 	default:
 		if rows.Next() {
-			if err := rows.Scan(scannerOf(ptr, columns[0])); err != nil {
+			if err := scanSingleRow(rows, columns, target); err != nil {
 				return err
 			}
 		}
@@ -52,28 +58,27 @@ func Scan(rows *sql.Rows, data interface{}) error {
 	return rows.Err()
 }
 
-func scan2Slice(rows *sql.Rows, columns []columnType, targets, targetsPtr reflect.Value) error {
-	elemType := targets.Type().Elem()
-	var isPtr bool
-	if elemType.Kind() == reflect.Ptr {
-		elemType, isPtr = elemType.Elem(), true
+// If target is a struct, it scan all columns into the struct, otherwise it scan a single column.
+// No indirect is performed, because nil value should be set to pointer.
+func scanSingleRow(rows *sql.Rows, columns []columnType, target reflect.Value) error {
+	addr := target.Addr().Interface()
+	switch addr.(type) {
+	case sql.Scanner:
+		return rows.Scan(addr)
+	case *time.Time:
+		return rows.Scan(scannerOf(target, columns[0]))
 	}
-	for rows.Next() {
-		ptr := reflect.New(elemType)
-		if elemType.Kind() == reflect.Struct {
-			if err := scan2Struct(rows, columns, ptr.Elem()); err != nil {
-				return err
-			}
-		} else if err := rows.Scan(scannerOf(ptr, columns[0])); err != nil {
+
+	switch target.Kind() {
+	case reflect.Struct:
+		if err := scan2Struct(rows, columns, target); err != nil {
 			return err
 		}
-		if isPtr {
-			targets = reflect.Append(targets, ptr)
-		} else {
-			targets = reflect.Append(targets, ptr.Elem())
+	default:
+		if err := rows.Scan(scannerOf(target, columns[0])); err != nil {
+			return err
 		}
 	}
-	targetsPtr.Elem().Set(targets)
 	return nil
 }
 
@@ -84,7 +89,7 @@ func scan2Struct(rows *sql.Rows, columns []columnType, target reflect.Value) err
 		if !field.IsValid() {
 			return errors.New("bsql: no or multiple field '" + column.FieldName + "' in struct")
 		}
-		scanners = append(scanners, scannerOf(field.Addr(), column))
+		scanners = append(scanners, scannerOf(field, column))
 	}
 	if err := rows.Scan(scanners...); err != nil {
 		return err

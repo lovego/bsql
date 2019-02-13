@@ -85,22 +85,45 @@ func ExampleScan_structSlice() {
 	//   2001-09-01 10:25:48 +0800 CST 2001-09-02 10:25:58 +0800 CST}
 }
 
-func ExampleScan_structPointerSlice() {
-	var rows []*Student
-	if err := Scan(getTestStudents(), &rows); err != nil {
+func ExampleScan_string() {
+	var value string
+	if err := Scan(getTestRows(`select 'abc'`), &value); err != nil {
 		log.Panic(err)
 	}
-	for _, row := range rows {
-		fmt.Printf("{%d %s %v %v %v %v %d\n  %v %v}\n",
-			row.Id, row.Name, row.Cities, row.FriendIds, row.Scores, row.Money, row.Status,
-			row.CreatedAt, row.UpdatedAt,
-		)
+	fmt.Println(value)
+
+	if err := Scan(getTestNull(), &value); err != nil {
+		log.Panic(err)
 	}
+	fmt.Printf("'%s'\n", value)
+
 	// Output:
-	// {1 李雷 [成都 上海] [1001 1002] [语文 99 数学 100] 25.04 0
-	//   2001-09-01 12:25:48 +0800 CST <nil>}
-	// {2 韩梅梅 [广州 北京] [1001 1003] [语文 98 数学 95] 95.9 0
-	//   2001-09-01 10:25:48 +0800 CST 2001-09-02 10:25:58 +0800 CST}
+	// abc
+	// ''
+}
+
+func ExampleScan_stringPointer() {
+	var pointer *string
+	if err := Scan(getTestRows(`select 'abc'`), &pointer); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(*pointer)
+
+	if err := Scan(getTestNull(), &pointer); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(pointer)
+
+	var p **string
+	if err := Scan(getTestRows(`select 'abc'`), &p); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(**p)
+
+	// Output:
+	// abc
+	// <nil>
+	// abc
 }
 
 func ExampleScan_int() {
@@ -113,10 +136,11 @@ func ExampleScan_int() {
 	if err := Scan(getTestNull(), &value); err != nil {
 		fmt.Println(err)
 	}
+	fmt.Println(value)
 
 	// Output:
 	// 9
-	// sql: Scan error on column index 0: converting driver.Value type <nil> ("<nil>") to a int: invalid syntax
+	// 0
 }
 
 func ExampleScan_intPointer() {
@@ -149,7 +173,7 @@ func ExampleScan_intValueOutOfRange() {
 		fmt.Println(err)
 	}
 	// Output:
-	// sql: Scan error on column index 0: converting driver.Value type int64 ("128") to a int8: value out of range
+	// sql: Scan error on column index 0: bsql: cannot assign int64(128) to int8: value out of range
 }
 
 func ExampleScan_intSlice() {
@@ -179,11 +203,20 @@ func ExampleScan_pqInt64Array() {
 
 func ExampleScan_float() {
 	var f float32
-	if err := Scan(getTestRows(`select 1.23`), &f); err != nil {
+	if err := Scan(getTestRows(`select 1.23::float`), &f); err != nil {
 		log.Panic(err)
 	}
 	fmt.Println(f)
 	// Output: 1.23
+}
+
+func ExampleScan_time() {
+	var t time.Time
+	if err := Scan(getTestRows(`select '2001-09-01 12:25:48+08'::timestamptz`), &t); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(t)
+	// Output: 2001-09-01 12:25:48 +0800 CST
 }
 
 func getTestRows(sql string) *sql.Rows {

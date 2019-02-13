@@ -1,26 +1,26 @@
 package scan
 
 import (
+	"fmt"
+	"log"
 	"reflect"
-	"testing"
 )
 
-func TestJsonScannerNilValue(t *testing.T) {
+func ExampleJsonScanner() {
 	var m map[string]int
-	js := jsonScanner{destAddr: reflect.ValueOf(&m)}
+	js := jsonScanner{dest: reflect.ValueOf(&m).Elem()}
 	if err := js.Scan(nil); err != nil {
-		t.Fatal(err)
+		log.Panic(err)
 	}
-	if m != nil {
-		t.Errorf("unexpected: %v", reflect.ValueOf(m))
-	}
+	fmt.Println(m == nil)
 
 	m = map[string]int{"key": 1}
-	js = jsonScanner{destAddr: reflect.ValueOf(&m)}
 	if err := js.Scan(nil); err != nil {
-		t.Fatal(err)
+		log.Panic(err)
 	}
-	if m != nil {
-		t.Errorf("unexpected: %v", m)
-	}
+	fmt.Println(m == nil)
+
+	// Output:
+	// true
+	// true
 }
