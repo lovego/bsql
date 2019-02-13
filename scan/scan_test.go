@@ -58,13 +58,14 @@ func ExampleScan_struct() {
 	if err := Scan(getTestStudents(), &row); err != nil {
 		log.Panic(err)
 	}
+	row.CreatedAt = row.CreatedAt.UTC()
 	fmt.Printf("{%d %s %v %v %v %v %d\n  %v %v}\n",
 		row.Id, row.Name, row.Cities, row.FriendIds, row.Scores, row.Money, row.Status,
 		row.CreatedAt, row.UpdatedAt,
 	)
 	// Output:
 	// {1 李雷 [成都 上海] [1001 1002] [语文 99 数学 100] 25.04 0
-	//   2001-09-01 12:25:48 +0800 CST <nil>}
+	//   2001-09-01 04:25:48 +0000 UTC <nil>}
 }
 
 func ExampleScan_structSlice() {
@@ -73,6 +74,11 @@ func ExampleScan_structSlice() {
 		log.Panic(err)
 	}
 	for _, row := range rows {
+		row.CreatedAt = row.CreatedAt.UTC()
+		if row.UpdatedAt != nil {
+			t := row.UpdatedAt.UTC()
+			row.UpdatedAt = &t
+		}
 		fmt.Printf("{%d %s %v %v %v %v %d\n  %v %v}\n",
 			row.Id, row.Name, row.Cities, row.FriendIds, row.Scores, row.Money, row.Status,
 			row.CreatedAt, row.UpdatedAt,
@@ -80,9 +86,9 @@ func ExampleScan_structSlice() {
 	}
 	// Output:
 	// {1 李雷 [成都 上海] [1001 1002] [语文 99 数学 100] 25.04 0
-	//   2001-09-01 12:25:48 +0800 CST <nil>}
+	//   2001-09-01 04:25:48 +0000 UTC <nil>}
 	// {2 韩梅梅 [广州 北京] [1001 1003] [语文 98 数学 95] 95.9 0
-	//   2001-09-01 10:25:48 +0800 CST 2001-09-02 10:25:58 +0800 CST}
+	//   2001-09-01 02:25:48 +0000 UTC 2001-09-02 02:25:58 +0000 UTC}
 }
 
 func ExampleScan_string() {
@@ -247,8 +253,8 @@ func ExampleScan_time() {
 	if err := Scan(getTestRows(`select '2001-09-01 12:25:48+08'::timestamptz`), &t); err != nil {
 		log.Panic(err)
 	}
-	fmt.Println(t)
-	// Output: 2001-09-01 12:25:48 +0800 CST
+	fmt.Println(t.UTC())
+	// Output: 2001-09-01 04:25:48 +0000 UTC
 }
 
 func getTestRows(sql string) *sql.Rows {
