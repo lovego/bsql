@@ -263,7 +263,14 @@ func ExampleScan_scanner() {
 		log.Panic(err)
 	}
 	fmt.Println(***d)
-	// Output: 12.34
+
+	if err := Scan(getTestNull(), &d); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(d)
+	// Output:
+	// 12.34
+	// <nil>
 }
 
 func getTestRows(sql string) *sql.Rows {

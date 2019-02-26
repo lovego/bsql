@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 	"time"
@@ -21,6 +22,15 @@ The src value will be of one of the following types:
    nil - for NULL values
 */
 func (bs *basicScanner) Scan(srcIfc interface{}) error {
+	if srcIfc == nil {
+		// if src is null, should set dest to it's zero value.
+		// eg. when dest is int, should set it to 0.
+		bs.dest.Set(reflect.Zero(bs.dest.Type()))
+		return nil
+	}
+	if scanner := getScanner(bs.dest.Addr()); scanner != nil {
+		return scanner.Scan(srcIfc)
+	}
 	switch src := srcIfc.(type) {
 	case int64:
 		return scanInt(src, getRealDest(bs.dest))
@@ -34,14 +44,21 @@ func (bs *basicScanner) Scan(srcIfc interface{}) error {
 		return scanString(src, getRealDest(bs.dest))
 	case time.Time:
 		return scanTime(src, getRealDest(bs.dest))
-	case nil:
-		// if src is null, should set dest to it's zero value.
-		// eg. when dest is int, should set it to 0.
-		bs.dest.Set(reflect.Zero(bs.dest.Type()))
-		return nil
 	default:
 		return fmt.Errorf("bsql basicScanner unexpected src: %T(%v)", src, src)
 	}
+}
+
+func getScanner(addr reflect.Value) sql.Scanner {
+	for ; addr.Kind() == reflect.Ptr; addr = addr.Elem() {
+		if addr.IsNil() {
+			addr.Set(reflect.New(addr.Type().Elem()))
+		}
+		if scanner, ok := addr.Interface().(sql.Scanner); ok {
+			return scanner
+		}
+	}
+	return nil
 }
 
 // the preceding steps ensured that dest is valid

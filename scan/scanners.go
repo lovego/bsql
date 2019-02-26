@@ -9,12 +9,15 @@ import (
 	"github.com/lib/pq"
 )
 
+var scannerType = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
+
 // when JSON/JSONB column use jsonScanner, when ARRAY column use pq.Array,
 // otherwise use basicScanner.
 // Because sql.Rows.Scan's builtin logic can't scan nil to int/string,
 // so we always return a sql.Scanner to avoid its builtin logic.
 func scannerOf(dest reflect.Value, column columnType) interface{} {
-	if scanner := getScanner(dest.Addr()); scanner != nil {
+	addr := dest.Addr()
+	if scanner, ok := addr.Interface().(sql.Scanner); ok {
 		return scanner
 	}
 
@@ -27,34 +30,11 @@ func scannerOf(dest reflect.Value, column columnType) interface{} {
 		return &jsonScanner{dest}
 	default:
 		if len(dbType) > 0 && dbType[0] == '_' {
-			return pq.Array(dest.Addr().Interface())
+			return pq.Array(addr.Interface())
 		} else {
 			return &basicScanner{dest}
 		}
 	}
-}
-
-var scannerType = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
-
-func getScanner(addr reflect.Value) interface{} {
-	for typ := addr.Type(); typ.Kind() == reflect.Ptr; typ = typ.Elem() {
-		if typ.Implements(scannerType) {
-			return getNonNilScanner(addr)
-		}
-	}
-	return nil
-}
-
-func getNonNilScanner(addr reflect.Value) interface{} {
-	for ; addr.Kind() == reflect.Ptr; addr = addr.Elem() {
-		if addr.IsNil() {
-			addr.Set(reflect.New(addr.Type().Elem()))
-		}
-		if addr.Type().Implements(scannerType) {
-			return addr.Interface()
-		}
-	}
-	return nil
 }
 
 type jsonScanner struct {
