@@ -14,10 +14,10 @@ import (
 // Because sql.Rows.Scan's builtin logic can't scan nil to int/string,
 // so we always return a sql.Scanner to avoid its builtin logic.
 func scannerOf(dest reflect.Value, column columnType) interface{} {
-	addr := dest.Addr().Interface()
-	if _, ok := addr.(sql.Scanner); ok {
-		return addr
+	if scanner := getScanner(dest.Addr()); scanner != nil {
+		return scanner
 	}
+
 	var dbType string
 	if column.ColumnType != nil {
 		dbType = column.ColumnType.DatabaseTypeName()
@@ -32,6 +32,29 @@ func scannerOf(dest reflect.Value, column columnType) interface{} {
 			return &basicScanner{dest}
 		}
 	}
+}
+
+var scannerType = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
+
+func getScanner(addr reflect.Value) interface{} {
+	for typ := addr.Type(); typ.Kind() == reflect.Ptr; typ = typ.Elem() {
+		if typ.Implements(scannerType) {
+			return getNonNilScanner(addr)
+		}
+	}
+	return nil
+}
+
+func getNonNilScanner(addr reflect.Value) interface{} {
+	for ; addr.Kind() == reflect.Ptr; addr = addr.Elem() {
+		if addr.IsNil() {
+			addr.Set(reflect.New(addr.Type().Elem()))
+		}
+		if addr.Type().Implements(scannerType) {
+			return addr.Interface()
+		}
+	}
+	return nil
 }
 
 type jsonScanner struct {

@@ -257,6 +257,15 @@ func ExampleScan_time() {
 	// Output: 2001-09-01 04:25:48 +0000 UTC
 }
 
+func ExampleScan_scanner() {
+	var d ***decimal.Decimal
+	if err := Scan(getTestRows(`select '12.34'`), &d); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(***d)
+	// Output: 12.34
+}
+
 func getTestRows(sql string) *sql.Rows {
 	rows, err := db.Query(sql)
 	if err != nil {
