@@ -97,7 +97,7 @@ func valuer(v driver.Valuer) string {
 		if _, err := strconv.ParseFloat(s, 64); err == nil {
 			return s
 		} else {
-			return "'" + s + "'"
+			return Q(s)
 		}
 	default:
 		return V(ifc)
