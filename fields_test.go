@@ -43,7 +43,7 @@ func ExampleFieldsFromStruct() {
 	type TestT2 struct {
 		T2Name string
 	}
-	type TestT3 struct {
+	type testT3 struct {
 		T3Name string
 	}
 	type TestT4 int
@@ -53,7 +53,7 @@ func ExampleFieldsFromStruct() {
 		Name        string
 		notExported int
 		TestT2
-		*TestT3
+		*testT3
 		TestT4
 		testT5
 	}
