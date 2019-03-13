@@ -90,7 +90,9 @@ func traverseStructFields(typ reflect.Type, fn func(field reflect.StructField)) 
 		field := typ.Field(i)
 		if (!field.Anonymous || !traverseStructFields(field.Type, fn)) &&
 			(field.Name[0] >= 'A' && field.Name[0] <= 'Z') {
-			fn(field)
+			if value, ok := struct_tag.Lookup(string(field.Tag), `sql`); !ok || value != "-" {
+				fn(field)
+			}
 		}
 	}
 	return true
