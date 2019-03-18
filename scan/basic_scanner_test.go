@@ -68,8 +68,11 @@ func ExampleScanBytes() {
 	fmt.Println(scanBytes(nil, getRealDest(reflect.ValueOf(&b))), b)
 	fmt.Println(scanBytes([]byte{}, getRealDest(reflect.ValueOf(&b))), b)
 	fmt.Println(scanBytes([]byte{45, 46, 47}, getRealDest(reflect.ValueOf(&b))), b)
+	var f float32
+	fmt.Println(scanBytes([]byte("1.23"), getRealDest(reflect.ValueOf(&f))), f)
 	// Output:
 	// <nil> []
 	// <nil> []
 	// <nil> [45 46 47]
+	// <nil> 1.23
 }

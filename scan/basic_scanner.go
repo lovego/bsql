@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 )
 
@@ -158,6 +159,12 @@ func scanBytes(src []byte, dest reflect.Value) error {
 		dest.SetBytes(src)
 	case reflect.String:
 		dest.SetString(string(src))
+	case reflect.Float64, reflect.Float32:
+		if float, err := strconv.ParseFloat(string(src), 64); err == nil {
+			dest.SetFloat(float)
+		} else {
+			return errorCannotAssign(src, dest)
+		}
 	default:
 		return errorCannotAssign(src, dest)
 	}
@@ -173,6 +180,12 @@ func scanString(src string, dest reflect.Value) error {
 			return errorCannotAssign(src, dest)
 		}
 		dest.SetBytes([]byte(src))
+	case reflect.Float64, reflect.Float32:
+		if float, err := strconv.ParseFloat(src, 64); err == nil {
+			dest.SetFloat(float)
+		} else {
+			return errorCannotAssign(src, dest)
+		}
 	default:
 		return errorCannotAssign(src, dest)
 	}
