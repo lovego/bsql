@@ -43,16 +43,23 @@ type jsonScanner struct {
 
 func (js *jsonScanner) Scan(src interface{}) error {
 	switch buf := src.(type) {
-	case []byte:
-		return json.Unmarshal(buf, js.dest.Addr().Interface())
-	case string:
-		return json.Unmarshal([]byte(buf), js.dest.Addr().Interface())
 	case nil:
 		// if src is null, should set dest to it's zero value.
 		// eg. when dest is int, should set it to 0.
 		js.dest.Set(reflect.Zero(js.dest.Type()))
 		return nil
+	case []byte:
+		return json.Unmarshal(buf, getJsonDest(js.dest))
+	case string:
+		return json.Unmarshal([]byte(buf), getJsonDest(js.dest))
 	default:
 		return fmt.Errorf("bsql jsonScanner unexpected src: %T(%v)", src, src)
 	}
+}
+
+func getJsonDest(dest reflect.Value) interface{} {
+	if dest.Kind() == reflect.Interface && !dest.IsNil() {
+		return dest.Elem().Interface()
+	}
+	return dest.Addr().Interface()
 }

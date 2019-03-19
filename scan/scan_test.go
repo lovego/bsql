@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
 	"github.com/lib/pq"
@@ -271,6 +272,28 @@ func ExampleScan_scanner() {
 	// Output:
 	// 12.34
 	// <nil>
+}
+
+func ExampleScan_interface() {
+	var s struct {
+		A interface{}
+	}
+	if err := Scan(getTestRows(`SELECT 12 AS a`), &s); err != nil {
+		log.Panic(err)
+	}
+	fmt.Printf("%v %v\n", s, reflect.TypeOf(s.A))
+
+	var u uint64
+	s.A = &u
+	if err := Scan(getTestRows(`SELECT 12 AS a`), &s); err != nil {
+		log.Panic(err)
+	}
+	value := *s.A.(*uint64)
+	fmt.Printf("%d %v %v\n", u, value, reflect.TypeOf(value))
+
+	// Output:
+	// {12} int64
+	// 12 12 uint64
 }
 
 func getTestRows(sql string) *sql.Rows {

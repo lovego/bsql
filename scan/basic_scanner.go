@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+var emptyInterface = reflect.TypeOf((*interface{})(nil)).Elem()
+
 type basicScanner struct {
 	dest reflect.Value
 }
@@ -64,6 +66,9 @@ func getScanner(addr reflect.Value) sql.Scanner {
 
 // the preceding steps ensured that dest is valid
 func getRealDest(dest reflect.Value) reflect.Value {
+	if dest.Kind() == reflect.Interface && !dest.IsNil() {
+		dest = dest.Elem()
+	}
 	for dest.Kind() == reflect.Ptr {
 		if dest.IsNil() {
 			dest.Set(reflect.New(dest.Type().Elem()))
@@ -124,6 +129,12 @@ func scanInt(src int64, dest reflect.Value) error {
 			return errorValueOutOfRange(src, dest)
 		}
 		dest.SetUint(uint64(src))
+	case reflect.Interface:
+		if dest.Type() == emptyInterface {
+			dest.Set(reflect.ValueOf(src))
+		} else {
+			return errorCannotAssign(src, dest)
+		}
 	default:
 		return errorCannotAssign(src, dest)
 	}
@@ -134,6 +145,12 @@ func scanFloat(src float64, dest reflect.Value) error {
 	switch dest.Kind() {
 	case reflect.Float64, reflect.Float32:
 		dest.SetFloat(src)
+	case reflect.Interface:
+		if dest.Type() == emptyInterface {
+			dest.Set(reflect.ValueOf(src))
+		} else {
+			return errorCannotAssign(src, dest)
+		}
 	default:
 		return errorCannotAssign(src, dest)
 	}
@@ -144,6 +161,12 @@ func scanBool(src bool, dest reflect.Value) error {
 	switch dest.Kind() {
 	case reflect.Bool:
 		dest.SetBool(src)
+	case reflect.Interface:
+		if dest.Type() == emptyInterface {
+			dest.Set(reflect.ValueOf(src))
+		} else {
+			return errorCannotAssign(src, dest)
+		}
 	default:
 		return errorCannotAssign(src, dest)
 	}
@@ -162,6 +185,12 @@ func scanBytes(src []byte, dest reflect.Value) error {
 	case reflect.Float64, reflect.Float32:
 		if float, err := strconv.ParseFloat(string(src), 64); err == nil {
 			dest.SetFloat(float)
+		} else {
+			return errorCannotAssign(src, dest)
+		}
+	case reflect.Interface:
+		if dest.Type() == emptyInterface {
+			dest.Set(reflect.ValueOf(src))
 		} else {
 			return errorCannotAssign(src, dest)
 		}
@@ -186,6 +215,12 @@ func scanString(src string, dest reflect.Value) error {
 		} else {
 			return errorCannotAssign(src, dest)
 		}
+	case reflect.Interface:
+		if dest.Type() == emptyInterface {
+			dest.Set(reflect.ValueOf(src))
+		} else {
+			return errorCannotAssign(src, dest)
+		}
 	default:
 		return errorCannotAssign(src, dest)
 	}
@@ -196,6 +231,8 @@ func scanTime(src time.Time, dest reflect.Value) error {
 	addr := dest.Addr().Interface()
 	if ptr, ok := addr.(*time.Time); ok {
 		*ptr = src
+	} else if dest.Type() == emptyInterface {
+		dest.Set(reflect.ValueOf(src))
 	} else {
 		return errorCannotAssign(src, dest)
 	}

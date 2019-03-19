@@ -24,3 +24,26 @@ func ExampleJsonScanner() {
 	// true
 	// true
 }
+
+func ExampleJsonScanner_interface() {
+	var ifc interface{}
+	js := jsonScanner{dest: reflect.ValueOf(&ifc).Elem()}
+
+	if err := js.Scan("123"); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(ifc, reflect.TypeOf(ifc))
+
+	var i uint
+	ifc = &i
+
+	if err := js.Scan("123"); err != nil {
+		log.Panic(err)
+	}
+	value := *ifc.(*uint)
+	fmt.Println(value, reflect.TypeOf(value))
+
+	// Output:
+	// 123 float64
+	// 123 uint
+}
