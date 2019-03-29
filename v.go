@@ -60,11 +60,7 @@ func V(i interface{}) string {
 	}
 
 	// other types: use json
-	b, err := json.Marshal(i)
-	if err != nil {
-		log.Panic("bsql json.Marshal: ", err)
-	}
-	return Q(string(b))
+	return Json(i)
 }
 
 // Array return data in postgres array form.
@@ -82,12 +78,19 @@ func Array(data interface{}) string {
 func Json(data interface{}) string {
 	b, err := json.Marshal(data)
 	if err != nil {
-		log.Panic("bsql JsonArray: ", err)
+		log.Panic("bsql json.Marshal: ", err)
 	}
 	return Q(string(b))
 }
 
+var valuerType = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
+
 func valuer(v driver.Valuer) string {
+	if rv := reflect.ValueOf(v); rv.Kind() == reflect.Ptr && rv.IsNil() &&
+		rv.Type().Elem().Implements(valuerType) {
+		return "NULL"
+	}
+
 	ifc, err := v.Value()
 	if err != nil {
 		log.Panic("bsql valuer: ", err)

@@ -42,7 +42,11 @@ func ExampleV_time() {
 func ExampleV_driverValuer() {
 	var d = decimal.New(1234, -2)
 	fmt.Println(V(d), V(&d))
-	// Output: 12.34 12.34
+	var p *decimal.Decimal
+	fmt.Println(V(p))
+	// Output:
+	// 12.34 12.34
+	// NULL
 }
 
 // basic types
