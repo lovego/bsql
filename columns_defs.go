@@ -34,11 +34,15 @@ func init() {
 }
 
 func ColumnsDefs(strct interface{}) string {
-	var columns []string
-	traverseStructFields(reflect.TypeOf(strct), func(field reflect.StructField) {
+	return strings.Join(columnsFromStruct(strct), ",\n")
+}
+
+func columnsFromStruct(model interface{}) []string {
+	columns := make([]string, 0)
+	traverseStructFields(reflect.TypeOf(model), func(field reflect.StructField) {
 		columns = append(columns, Field2Column(field.Name)+" "+getColumnDefinition(field))
 	})
-	return strings.Join(columns, ",\n")
+	return columns
 }
 
 func getColumnDefinition(field reflect.StructField) string {
