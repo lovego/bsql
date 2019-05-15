@@ -28,14 +28,13 @@ func TableSql(name string, model interface{}, constraints, extSqls []string) str
 %s
 );
 %s
-%s`, name, linesStr, comments, extSql)
+%s`, name, linesStr, extSql, comments)
 	return sql
 }
 
-func ensureTail(str string, tail rune) string {
-	tmp := []rune(str)
-	if tmp[len(tmp)-1] != tail {
-		tmp = append(tmp, tail)
+func ensureTail(str string, tail byte) string {
+	if str[len(str)-1] == tail {
+		return str
 	}
-	return string(tmp)
+	return str + string(tail)
 }
