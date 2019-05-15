@@ -3,6 +3,7 @@ package bsql
 import (
 	"fmt"
 	"strconv"
+	"unicode/utf8"
 
 	"github.com/lib/pq"
 )
@@ -38,11 +39,19 @@ func OffsetToLineAndColumn(content string, offset int64) (int64, int64) {
 	if offset <= 0 || offset > int64(len(content)) {
 		return 0, 0
 	}
-	content = content[:offset]
 	var line, column, lastLineWidth int64 = 1, 0, 0
-	for _, b := range content {
+	for i := int64(0); i < offset; i++ {
+		if len(content) == 0 {
+			return 0, 0
+		}
+		char, size := utf8.DecodeRuneInString(content)
+		if char == utf8.RuneError || size == 0 {
+			return 0, 0
+		}
+		content = content[size:]
+
 		column++
-		if b == '\n' {
+		if char == int32('\n') {
 			line++
 			lastLineWidth = column
 			column = 0
