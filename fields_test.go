@@ -23,13 +23,6 @@ func ExampleField2Column() {
 	// i_love_golang_and_json_so_much
 }
 
-func ExampleFields2ColumnsStr() {
-	var inputs = []string{"XiaoMei", "HttpStatus", "You123", "PriceP"}
-	fmt.Println(Fields2ColumnsStr(inputs))
-	// Output:
-	// xiao_mei,http_status,you123,price_p
-}
-
 func ExampleFields2Columns() {
 	var inputs = []string{"XiaoMei", "HTTPStatus", "You123",
 		"PriceP", "4sPrice", "Price4s", "goodHTTP", "ILoveGolangAndJSONSoMuch",
@@ -37,6 +30,20 @@ func ExampleFields2Columns() {
 	fmt.Println(Fields2Columns(inputs))
 	// Output:
 	// [xiao_mei http_status you123 price_p 4s_price price4s good_http i_love_golang_and_json_so_much]
+}
+
+func ExampleFields2ColumnsStr() {
+	var inputs = []string{"XiaoMei", "HttpStatus", "You123", "PriceP"}
+	fmt.Println(Fields2ColumnsStr(inputs))
+	// Output:
+	// xiao_mei,http_status,you123,price_p
+}
+
+func ExampleFieldsToColumnsStr() {
+	var inputs = []string{"XiaoMei", "HttpStatus", "You123", "PriceP"}
+	fmt.Println(FieldsToColumnsStr(inputs, "t.", []string{"PriceP"}))
+	// Output:
+	// t.xiao_mei,t.http_status,t.you123
 }
 
 func ExampleFieldsFromStruct() {

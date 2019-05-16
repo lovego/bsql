@@ -52,11 +52,20 @@ func Fields2Columns(fields []string) (result []string) {
 }
 
 func Fields2ColumnsStr(fields []string) string {
-	var result []string
+	return strings.Join(Fields2Columns(fields), ",")
+}
+
+func FieldsToColumns(fields []string, prefix string, exclude []string) (result []string) {
 	for _, field := range fields {
-		result = append(result, Field2Column(field))
+		if notIn(field, exclude) {
+			result = append(result, prefix+Field2Column(field))
+		}
 	}
-	return strings.Join(result, ",")
+	return
+}
+
+func FieldsToColumnsStr(fields []string, prefix string, exclude []string) string {
+	return strings.Join(FieldsToColumns(fields, prefix, exclude), ",")
 }
 
 func FieldsFromStruct(strct interface{}, exclude []string) (result []string) {
