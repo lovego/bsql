@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/lib/pq"
@@ -194,7 +195,7 @@ func ExampleScan_intPointer() {
 func ExampleScan_intValueOutOfRange() {
 	var i int8
 	if err := Scan(getTestRows(`select 128`), &i); err != nil {
-		fmt.Println(err)
+		fmt.Println(strings.ReplaceAll(err.Error(), `, name "?column?"`, ``))
 	}
 	// Output:
 	// sql: Scan error on column index 0: bsql: cannot assign int64(128) to int8: value out of range
