@@ -23,13 +23,13 @@ func ExampleColumnsDefs() {
 
 	fmt.Println(ColumnsDefs(Student{}))
 	// Output:
-	// id serial8 not null primary key,
-	// name text not null,
-	// friend_ids int[] not null,
-	// cities jsonb not null,
-	// scores jsonb not null,
-	// money decimal not null,
-	// status int2 not null default 0,
-	// created_at timestamptz not null,
-	// updated_at timestamptz not null
+	// id serial8 NOT NULL PRIMARY KEY,
+	// name text NOT NULL,
+	// friend_ids int[] NOT NULL,
+	// cities jsonb NOT NULL,
+	// scores jsonb NOT NULL,
+	// money decimal NOT NULL,
+	// status int2 NOT NULL default 0,
+	// created_at timestamptz NOT NULL,
+	// updated_at timestamptz NOT NULL
 }

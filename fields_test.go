@@ -78,6 +78,6 @@ func ExampleColumnsComments() {
 
 	fmt.Println(ColumnsComments("tests", Test{}))
 	// OutPut:
-	// comment on column tests.id is '主键';
-	// comment on column tests.name is '名称';
+	// COMMENT ON COLUMN tests.id IS '主键';
+	// COMMENT ON COLUMN tests.name IS '名称';
 }
