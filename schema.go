@@ -8,27 +8,22 @@ import (
 // TableSql add create table sql
 // Using name as table name, model struct as table columns and comments.
 func TableSql(name string, model interface{}, constraints, extSqls []string) string {
-	lines := columnsFromStruct(model)
-	lines = append(lines, constraints...)
-
-	for i := range lines {
-		lines[i] = `  ` + strings.TrimRight(strings.TrimSpace(lines[i]), `,`)
+	columns := columnsFromStruct(model)
+	columns = append(columns, constraints...)
+	for i := range columns {
+		columns[i] = `  ` + strings.TrimRight(strings.TrimSpace(columns[i]), `,`)
 	}
-	linesStr := strings.Join(lines, ",\n")
+	columnsStr := strings.Join(columns, ",\n")
 
 	for i := range extSqls {
-		extSqls[i] = ensureTail(strings.TrimSpace(extSqls[i]), ';')
+		extSqls[i] = ensureTail(strings.TrimSpace(extSqls[i]), ';') + "\n"
 	}
-	extSql := strings.Join(extSqls, "\n")
+	extSqlsStr := strings.Join(extSqls, "")
 
-	comments := ColumnsComments(name, model)
-
-	sql := fmt.Sprintf(
-		`CREATE TABLE IF NOT EXISTS %s (
+	sql := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 %s
 );
-%s
-%s`, name, linesStr, extSql, comments)
+%s%s`, name, columnsStr, extSqlsStr, ColumnsComments(name, model))
 	return sql
 }
 

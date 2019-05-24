@@ -57,10 +57,10 @@ func getColumnDefinition(field reflect.StructField) string {
 		def = append(def, getColumnType(field))
 	}
 	if !hasNullConstraint(tag) {
-		def = append(def, "not null")
+		def = append(def, "NOT NULL")
 	}
 	if field.Name == "Id" && !hasPrimaryKeyConstraint(tag) {
-		def = append(def, "primary key")
+		def = append(def, "PRIMARY KEY")
 	}
 	if tag != "" && tag != "-" && !hasColumnType(tag) {
 		def = append(def, tag)

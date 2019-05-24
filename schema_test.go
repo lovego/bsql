@@ -30,10 +30,10 @@ func ExampleTableSql_1() {
 
 	// Output:
 	// CREATE TABLE IF NOT EXISTS pur.orders (
-	//   id serial8 primary key default null,
+	//   id serial8 PRIMARY KEY default null,
 	//   name text default null,
-	//   field1 text not null,
-	//   field2 text not null,
+	//   field1 text NOT NULL,
+	//   field2 text NOT NULL,
 	//   UNIQUE(name),
 	//   UNIQUE(name,field1)
 	// );
@@ -41,24 +41,23 @@ func ExampleTableSql_1() {
 	// 		(name,field1);
 	// CREATE INDEX IF NOT EXISTS order_fields_index2 ON pur.orders
 	// 		(name,field2);
-	// comment on column pur.orders.id is '主键ID';
-	// comment on column pur.orders.name is '名称';
-	// comment on column pur.orders.field1 is 'field1';
-	// comment on column pur.orders.field2 is 'field2';
+	// COMMENT ON COLUMN pur.orders.id IS '主键ID';
+	// COMMENT ON COLUMN pur.orders.name IS '名称';
+	// COMMENT ON COLUMN pur.orders.field1 IS 'field1';
+	// COMMENT ON COLUMN pur.orders.field2 IS 'field2';
 }
 
 func ExampleTableSql_2() {
 	fmt.Println(TableSql(`pur.orders`, &fakeTable{}, nil, nil))
 	// Output:
 	// CREATE TABLE IF NOT EXISTS pur.orders (
-	//   id serial8 primary key default null,
+	//   id serial8 PRIMARY KEY default null,
 	//   name text default null,
-	//   field1 text not null,
-	//   field2 text not null
+	//   field1 text NOT NULL,
+	//   field2 text NOT NULL
 	// );
-	//
-	// comment on column pur.orders.id is '主键ID';
-	// comment on column pur.orders.name is '名称';
-	// comment on column pur.orders.field1 is 'field1';
-	// comment on column pur.orders.field2 is 'field2';
+	// COMMENT ON COLUMN pur.orders.id IS '主键ID';
+	// COMMENT ON COLUMN pur.orders.name IS '名称';
+	// COMMENT ON COLUMN pur.orders.field1 IS 'field1';
+	// COMMENT ON COLUMN pur.orders.field2 IS 'field2';
 }

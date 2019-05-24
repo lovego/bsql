@@ -81,7 +81,7 @@ func ColumnsComments(table string, strct interface{}) (result string) {
 	traverseStructFields(reflect.TypeOf(strct), func(field reflect.StructField) {
 		if comment, _ := struct_tag.Lookup(string(field.Tag), "comment"); comment != "" {
 			result += fmt.Sprintf(
-				"comment on column %s.%s is %s;\n", table, Field2Column(field.Name), Q(comment),
+				"COMMENT ON COLUMN %s.%s IS %s;\n", table, Field2Column(field.Name), Q(comment),
 			)
 		}
 	})
