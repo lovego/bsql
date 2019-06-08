@@ -148,6 +148,10 @@ func (db *DB) RunInTransactionCtx(ctx context.Context, opName string, fn func(*T
 	return tx.Commit()
 }
 
+func (db *DB) GetDB() *sql.DB {
+	return db.db
+}
+
 var debug = os.Getenv(`DebugBsql`) != ``
 
 func debugSql(sql string, args []interface{}) {
