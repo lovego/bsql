@@ -22,7 +22,21 @@ func Values(data interface{}) string {
 			return "(" + SliceContents(value) + ")"
 		}
 	default:
-		return "(" + V(value.Interface()) + ")"
+		return "(" + V(data) + ")"
+	}
+}
+
+func SingleColumnValues(data interface{}) string {
+	value := reflect.ValueOf(data)
+	switch value.Kind() {
+	case reflect.Slice, reflect.Array:
+		var slice []string
+		for i := 0; i < value.Len(); i++ {
+			slice = append(slice, "("+V(value.Index(i).Interface())+")")
+		}
+		return strings.Join(slice, ",")
+	default:
+		return "(" + V(data) + ")"
 	}
 }
 

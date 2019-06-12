@@ -21,6 +21,18 @@ func ExampleValues() {
 	// (1,'a',true),(2,'b',true),(3,'c',false)
 }
 
+func ExampleSingleColumnValues() {
+	fmt.Println(SingleColumnValues(3))
+	fmt.Println(SingleColumnValues("a'bc"))
+	fmt.Println(SingleColumnValues([]int{1, 2, 3}))
+	fmt.Println(SingleColumnValues([]string{"a", "b", "c"}))
+	// Output:
+	// (3)
+	// ('a''bc')
+	// (1),(2),(3)
+	// ('a'),('b'),('c')
+}
+
 func ExampleSliceContents() {
 	data1 := []interface{}{"jack", "rose", 1}
 	fmt.Println(SliceContents(reflect.ValueOf(data1)))
