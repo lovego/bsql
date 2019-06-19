@@ -36,7 +36,11 @@ func ExampleV_bytes() {
 func ExampleV_time() {
 	var t time.Time
 	fmt.Println(V(t), V(&t))
-	// Output: '0001-01-01T00:00:00Z' '0001-01-01T00:00:00Z'
+	t, err := time.Parse(time.RFC3339Nano, "2019-06-19T13:52:08.123456789+08:00")
+	fmt.Println(V(t), V(&t), err)
+	// Output:
+	// '0001-01-01T00:00:00Z' '0001-01-01T00:00:00Z'
+	// '2019-06-19T13:52:08.123456+08:00' '2019-06-19T13:52:08.123456+08:00' <nil>
 }
 
 func ExampleV_driverValuer() {

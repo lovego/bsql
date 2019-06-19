@@ -25,7 +25,8 @@ func V(i interface{}) string {
 	case []byte:
 		return string(v)
 	case time.Time:
-		return "'" + v.Format(time.RFC3339Nano) + "'"
+		// postgres all time type has 1 microsecond resolution.
+		return "'" + v.Format("2006-01-02T15:04:05.999999Z07:00") + "'"
 	case driver.Valuer:
 		return valuer(v)
 	case nil:
