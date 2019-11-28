@@ -108,11 +108,15 @@ func StructValuesInWithType(value reflect.Value, typ reflect.Type, fields []stri
 		if !field.IsValid() {
 			log.Panic("bsql: no field '" + fieldName + "' in struct")
 		}
-		structField, ok := typ.FieldByName(fieldName)
-		if !ok {
-			log.Panic("bsql: no field '" + fieldName + "' in struct")
+		var fieldType string
+		if fieldName != `Id` {
+			structField, ok := typ.FieldByName(fieldName)
+			if !ok {
+				log.Panic("bsql: no field '" + fieldName + "' in struct")
+			}
+			fieldType = "::" + getColumnType(structField)
 		}
-		slice = append(slice, V(field.Interface())+"::"+getColumnType(structField))
+		slice = append(slice, V(field.Interface())+fieldType)
 	}
 	return "(" + strings.Join(slice, ",") + ")"
 }
