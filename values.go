@@ -99,6 +99,9 @@ func StructValuesInWithType(value reflect.Value, typ reflect.Type, fields []stri
 	if value.Kind() == reflect.Ptr || value.Kind() == reflect.Interface {
 		value = value.Elem()
 	}
+	if k := typ.Kind(); k == reflect.Ptr || k == reflect.Interface {
+		typ = typ.Elem()
+	}
 	if value.Kind() != reflect.Struct {
 		log.Panic("bsql: data must be struct or struct slice.")
 	}
