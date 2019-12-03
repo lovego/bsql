@@ -19,6 +19,13 @@ func Q(s string) string {
 	return "'" + s + "'"
 }
 
+// PatternEscape escape a string, replace '%' and '\'.
+func PatternEscape(s string) string {
+	s = strings.Replace(s, `\`, `\\`, -1)
+	s = strings.Replace(s, `%`, `\%`, -1)
+	return strings.Replace(s, `_`, `\_`, -1)
+}
+
 func V(i interface{}) string {
 	// special types
 	switch v := i.(type) {
