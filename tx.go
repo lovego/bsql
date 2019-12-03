@@ -29,7 +29,7 @@ func (tx *Tx) QueryT(duration time.Duration,
 func (tx *Tx) QueryCtx(ctx context.Context, opName string,
 	data interface{}, sql string, args ...interface{},
 ) error {
-	defer tracer.StartSpan(ctx, opName).Finish()
+	defer tracer.Finish(tracer.StartChild(ctx, opName))
 	if ctx.Done() == nil {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, tx.timeout)
@@ -70,7 +70,7 @@ func (tx *Tx) ExecT(
 func (tx *Tx) ExecCtx(
 	ctx context.Context, opName string, sql string, args ...interface{},
 ) (sql.Result, error) {
-	defer tracer.StartSpan(ctx, opName).Finish()
+	defer tracer.Finish(tracer.StartChild(ctx, opName))
 	if ctx.Done() == nil {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, tx.timeout)

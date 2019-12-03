@@ -44,7 +44,7 @@ func (db *DB) QueryT(duration time.Duration, data interface{}, sql string, args 
 func (db *DB) QueryCtx(ctx context.Context, opName string,
 	data interface{}, sql string, args ...interface{},
 ) error {
-	defer tracer.StartSpan(ctx, opName).Finish()
+	defer tracer.Finish(tracer.StartChild(ctx, opName))
 	if ctx.Done() == nil {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, db.timeout)
@@ -84,7 +84,7 @@ func (db *DB) ExecT(duration time.Duration, sql string, args ...interface{}) (sq
 
 func (db *DB) ExecCtx(ctx context.Context, opName string,
 	sql string, args ...interface{}) (sql.Result, error) {
-	defer tracer.StartSpan(ctx, opName).Finish()
+	defer tracer.Finish(tracer.StartChild(ctx, opName))
 	if ctx.Done() == nil {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, db.timeout)
@@ -122,8 +122,8 @@ func (db *DB) RunInTransactionT(duration time.Duration, fn func(*Tx) error) erro
 }
 
 func (db *DB) RunInTransactionCtx(ctx context.Context, opName string, fn func(*Tx, context.Context) error) error {
-	span := tracer.StartSpan(ctx, opName)
-	defer span.Finish()
+	ctx = tracer.StartChild(ctx, opName)
+	defer tracer.Finish(ctx)
 
 	if ctx.Done() == nil {
 		var cancel context.CancelFunc
@@ -141,7 +141,7 @@ func (db *DB) RunInTransactionCtx(ctx context.Context, opName string, fn func(*T
 			panic(err)
 		}
 	}()
-	if err := fn(&Tx{tx, db.timeout}, tracer.Context(context.Background(), span)); err != nil {
+	if err := fn(&Tx{tx, db.timeout}, ctx); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
