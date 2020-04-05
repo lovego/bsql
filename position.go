@@ -44,9 +44,9 @@ func GetPosition(content []rune, offset int) string {
 	}
 
 	lineContent := content[lineStart:lineEnd]
+	padding := makePadding(append([]rune(position), lineContent[:column-1]...))
 
-	return position + string(lineContent) + "\n" +
-		paddingBySpaces(position+string(lineContent[:column-1])) + "^"
+	return position + string(lineContent) + "\n" + padding + "^"
 }
 
 // line and column begins at 1
@@ -83,10 +83,15 @@ func GetLineEnd(content []rune, offset int) int {
 	return len(content)
 }
 
-func paddingBySpaces(s string) (result string) {
-	width := runewidth.StringWidth(s)
-	for i := 0; i < width; i++ {
-		result += " "
+func makePadding(content []rune) (result string) {
+	for _, char := range content {
+		if char == '\t' {
+			result += "\t"
+		} else {
+			for i := 0; i < runewidth.RuneWidth(char); i++ {
+				result += " "
+			}
+		}
 	}
 	return
 }
