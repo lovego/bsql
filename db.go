@@ -64,7 +64,7 @@ func (db *DB) query(ctx context.Context,
 		defer rows.Close()
 	}
 	if err != nil {
-		return err
+		return ErrorWithPosition(err, sql)
 	}
 	return scan.Scan(rows, data)
 }
@@ -79,7 +79,11 @@ func (db *DB) ExecT(duration time.Duration, sql string, args ...interface{}) (sq
 	if debug {
 		debugSql(sql, args)
 	}
-	return db.db.ExecContext(ctx, sql, args...)
+	result, err := db.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		err = ErrorWithPosition(err, sql)
+	}
+	return result, err
 }
 
 func (db *DB) ExecCtx(ctx context.Context, opName string,
@@ -93,7 +97,11 @@ func (db *DB) ExecCtx(ctx context.Context, opName string,
 	if debug {
 		debugSql(sql, args)
 	}
-	return db.db.ExecContext(ctx, sql, args...)
+	result, err := db.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		err = ErrorWithPosition(err, sql)
+	}
+	return result, err
 }
 
 func (db *DB) RunInTransaction(fn func(*Tx) error) error {
