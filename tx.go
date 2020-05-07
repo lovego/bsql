@@ -47,7 +47,7 @@ func (tx *Tx) query(ctx context.Context, data interface{}, sql string, args []in
 		defer rows.Close()
 	}
 	if err != nil {
-		return err
+		return ErrorWithPosition(err, sql)
 	}
 	return scan.Scan(rows, data)
 }
@@ -64,7 +64,11 @@ func (tx *Tx) ExecT(
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
-	return tx.tx.ExecContext(ctx, sql, args...)
+	result, err := tx.tx.ExecContext(ctx, sql, args...)
+	if err != nil {
+		err = ErrorWithPosition(err, sql)
+	}
+	return result, err
 }
 
 func (tx *Tx) ExecCtx(
@@ -79,5 +83,9 @@ func (tx *Tx) ExecCtx(
 	if debug {
 		debugSql(sql, args)
 	}
-	return tx.tx.ExecContext(ctx, sql, args...)
+	result, err := tx.tx.ExecContext(ctx, sql, args...)
+	if err != nil {
+		err = ErrorWithPosition(err, sql)
+	}
+	return result, err
 }

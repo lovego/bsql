@@ -85,7 +85,7 @@ func scanSingleRow(rows *sql.Rows, columns []columnType, target reflect.Value) e
 func scan2Struct(rows *sql.Rows, columns []columnType, target reflect.Value) error {
 	var scanners []interface{}
 	for _, column := range columns {
-		field := target.FieldByName(column.FieldName)
+		field := FieldByName(target, column.FieldName)
 		if !field.IsValid() {
 			return errors.New("bsql: no or multiple field '" + column.FieldName + "' in struct")
 		}
