@@ -152,6 +152,12 @@ func (db *DB) GetDB() *sql.DB {
 	return db.db
 }
 
+func (db *DB) SetTimeout(timeout time.Duration) {
+	if timeout > 0 {
+		db.timeout = timeout
+	}
+}
+
 var debug = os.Getenv(`DebugBsql`) != ``
 
 func debugSql(sql string, args []interface{}) {
