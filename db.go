@@ -12,16 +12,29 @@ import (
 	"github.com/lovego/tracer"
 )
 
-type DB struct {
-	db      *sql.DB
-	timeout time.Duration
-}
-
 type DbOrTx interface {
 	Query(data interface{}, sql string, args ...interface{}) error
 	QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error
 	Exec(sql string, args ...interface{}) (sql.Result, error)
 	ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error)
+}
+
+func IsNil(dbOrTx DbOrTx) bool {
+	if dbOrTx == nil {
+		return true
+	}
+	if tx, ok := dbOrTx.(*Tx); ok && tx == nil {
+		return true
+	}
+	if db, ok := dbOrTx.(*DB); ok && db == nil {
+		return true
+	}
+	return false
+}
+
+type DB struct {
+	db      *sql.DB
+	timeout time.Duration
 }
 
 func New(db *sql.DB, timeout time.Duration) *DB {
