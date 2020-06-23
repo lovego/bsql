@@ -7,6 +7,7 @@ import (
 
 	"github.com/lovego/bsql/scan"
 	"github.com/lovego/struct_tag"
+	"github.com/lovego/structs"
 )
 
 /* 单词边界有两种
@@ -88,23 +89,12 @@ func ColumnsComments(table string, strct interface{}) (result string) {
 	return
 }
 
-func traverseStructFields(typ reflect.Type, fn func(field reflect.StructField)) bool {
-	if typ.Kind() == reflect.Ptr {
-		typ = typ.Elem()
-	}
-	if typ.Kind() != reflect.Struct {
-		return false
-	}
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		if (!field.Anonymous || !traverseStructFields(field.Type, fn)) &&
-			(field.Name[0] >= 'A' && field.Name[0] <= 'Z') {
-			if value, ok := struct_tag.Lookup(string(field.Tag), `sql`); !ok || value != "-" {
-				fn(field)
-			}
+func traverseStructFields(typ reflect.Type, fn func(field reflect.StructField)) {
+	structs.TraverseExportedFields(typ, func(field reflect.StructField) {
+		if value, ok := struct_tag.Lookup(string(field.Tag), `sql`); !ok || value != "-" {
+			fn(field)
 		}
-	}
-	return true
+	})
 }
 
 func notIn(target string, slice []string) bool {
