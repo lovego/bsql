@@ -9,6 +9,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/lovego/bsql/scan"
+	"github.com/lovego/errs"
 	"github.com/lovego/tracer"
 )
 
@@ -64,8 +65,8 @@ func (db *DB) QueryCtx(ctx context.Context, opName string,
 		defer cancel()
 	}
 	return db.query(ctx, data, sql, args)
-
 }
+
 func (db *DB) query(ctx context.Context,
 	data interface{}, sql string, args []interface{},
 ) error {
@@ -77,9 +78,12 @@ func (db *DB) query(ctx context.Context,
 		defer rows.Close()
 	}
 	if err != nil {
-		return ErrorWithPosition(err, sql)
+		return errs.Trace(ErrorWithPosition(err, sql))
 	}
-	return scan.Scan(rows, data)
+	if err := scan.Scan(rows, data); err != nil {
+		return errs.Trace(err)
+	}
+	return nil
 }
 
 func (db *DB) Exec(sql string, args ...interface{}) (sql.Result, error) {
@@ -94,7 +98,7 @@ func (db *DB) ExecT(duration time.Duration, sql string, args ...interface{}) (sq
 	}
 	result, err := db.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = ErrorWithPosition(err, sql)
+		err = errs.Trace(ErrorWithPosition(err, sql))
 	}
 	return result, err
 }
@@ -112,7 +116,7 @@ func (db *DB) ExecCtx(ctx context.Context, opName string,
 	}
 	result, err := db.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = ErrorWithPosition(err, sql)
+		err = errs.Trace(ErrorWithPosition(err, sql))
 	}
 	return result, err
 }
@@ -127,7 +131,7 @@ func (db *DB) RunInTransactionT(duration time.Duration, fn func(*Tx) error) erro
 
 	tx, err := db.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return errs.Trace(err)
 	}
 	defer func() {
 		if err := recover(); err != nil {
@@ -139,7 +143,10 @@ func (db *DB) RunInTransactionT(duration time.Duration, fn func(*Tx) error) erro
 		_ = tx.Rollback()
 		return err
 	}
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return errs.Trace(err)
+	}
+	return nil
 }
 
 func (db *DB) RunInTransactionCtx(ctx context.Context, opName string, fn func(*Tx, context.Context) error) error {
@@ -154,7 +161,7 @@ func (db *DB) RunInTransactionCtx(ctx context.Context, opName string, fn func(*T
 
 	tx, err := db.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return errs.Trace(err)
 	}
 	defer func() {
 		if err := recover(); err != nil {
@@ -166,7 +173,10 @@ func (db *DB) RunInTransactionCtx(ctx context.Context, opName string, fn func(*T
 		_ = tx.Rollback()
 		return err
 	}
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return errs.Trace(err)
+	}
+	return nil
 }
 
 func (db *DB) GetDB() *sql.DB {

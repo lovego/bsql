@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/lib/pq"
+	"github.com/lovego/errs"
 )
 
 func UpsertSql(table string, toInsert, conflictKeys, notToUpdate []string) string {
@@ -45,6 +46,9 @@ ON CONFLICT (%s) DO UPDATE SET
 }
 
 func ConflictedUniqueIndex(err error) string {
+	if wrappedErr, ok := err.(*errs.Error); ok {
+		err = wrappedErr.GetError()
+	}
 	if pqError, ok := err.(*pq.Error); ok && pqError.Code == "23505" { // unique_violation
 		return pqError.Constraint
 	}

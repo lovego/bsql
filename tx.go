@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/lovego/bsql/scan"
+	"github.com/lovego/errs"
 	"github.com/lovego/tracer"
 )
 
@@ -47,9 +48,12 @@ func (tx *Tx) query(ctx context.Context, data interface{}, sql string, args []in
 		defer rows.Close()
 	}
 	if err != nil {
-		return ErrorWithPosition(err, sql)
+		return errs.Trace(ErrorWithPosition(err, sql))
 	}
-	return scan.Scan(rows, data)
+	if err := scan.Scan(rows, data); err != nil {
+		return errs.Trace(err)
+	}
+	return nil
 }
 
 func (tx *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
@@ -66,7 +70,7 @@ func (tx *Tx) ExecT(
 	defer cancel()
 	result, err := tx.tx.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = ErrorWithPosition(err, sql)
+		err = errs.Trace(ErrorWithPosition(err, sql))
 	}
 	return result, err
 }
@@ -85,7 +89,7 @@ func (tx *Tx) ExecCtx(
 	}
 	result, err := tx.tx.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = ErrorWithPosition(err, sql)
+		err = errs.Trace(ErrorWithPosition(err, sql))
 	}
 	return result, err
 }
