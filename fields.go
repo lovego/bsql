@@ -90,7 +90,7 @@ func ColumnsComments(table string, strct interface{}) (result string) {
 }
 
 func traverseStructFields(typ reflect.Type, fn func(field reflect.StructField)) {
-	structs.TraverseExportedFields(typ, func(field reflect.StructField) {
+	structs.TraverseType(typ, func(field reflect.StructField) {
 		if value, ok := struct_tag.Lookup(string(field.Tag), `sql`); !ok || value != "-" {
 			fn(field)
 		}

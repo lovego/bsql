@@ -57,7 +57,7 @@ func getScanner(addr reflect.Value) sql.Scanner {
 		if addr.IsNil() {
 			addr.Set(reflect.New(addr.Type().Elem()))
 		}
-		if scanner, ok := addr.Interface().(sql.Scanner); ok {
+		if scanner := trySqlScanner(addr.Interface()); scanner != nil {
 			return scanner
 		}
 	}

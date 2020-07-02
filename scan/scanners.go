@@ -7,17 +7,16 @@ import (
 	"reflect"
 
 	"github.com/lib/pq"
+	"github.com/shopspring/decimal"
 )
-
-var scannerType = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
 
 // when JSON/JSONB column use jsonScanner, when ARRAY column use pq.Array,
 // otherwise use basicScanner.
 // Because sql.Rows.Scan's builtin logic can't scan nil to int/string,
 // so we always return a sql.Scanner to avoid its builtin logic.
-func scannerOf(dest reflect.Value, column columnType) interface{} {
+func scannerOf(dest reflect.Value, column columnType) sql.Scanner {
 	addr := dest.Addr()
-	if scanner, ok := addr.Interface().(sql.Scanner); ok {
+	if scanner := trySqlScanner(addr.Interface()); scanner != nil {
 		return scanner
 	}
 
@@ -62,4 +61,27 @@ func getJsonDest(dest reflect.Value) interface{} {
 		return dest.Elem().Interface()
 	}
 	return dest.Addr().Interface()
+}
+
+func trySqlScanner(ptr interface{}) sql.Scanner {
+	if scanner, ok := ptr.(sql.Scanner); ok {
+		switch v := ptr.(type) {
+		case *decimal.Decimal:
+			return decimalScanner{v}
+		}
+		return scanner
+	}
+	return nil
+}
+
+type decimalScanner struct {
+	d *decimal.Decimal
+}
+
+func (ds decimalScanner) Scan(src interface{}) error {
+	if src == nil {
+		*ds.d = decimal.Zero
+		return nil
+	}
+	return ds.d.Scan(src)
 }

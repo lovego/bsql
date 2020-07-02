@@ -13,9 +13,9 @@ import (
 // because nil value should be set to the second layer pointer, not the non pointer type.
 // If target is a slice, it scan all rows into the slice, otherwise it scan a single row.
 func Scan(rows *sql.Rows, data interface{}) error {
-	if _, ok := data.(sql.Scanner); ok {
+	if scanner := trySqlScanner(data); scanner != nil {
 		if rows.Next() {
-			if err := rows.Scan(data); err != nil {
+			if err := rows.Scan(scanner); err != nil {
 				return err
 			}
 		}
@@ -62,9 +62,10 @@ func Scan(rows *sql.Rows, data interface{}) error {
 // No indirect is performed, because nil value should be set to pointer.
 func scanSingleRow(rows *sql.Rows, columns []columnType, target reflect.Value) error {
 	addr := target.Addr().Interface()
+	if scanner := trySqlScanner(addr); scanner != nil {
+		return rows.Scan(scanner)
+	}
 	switch addr.(type) {
-	case sql.Scanner:
-		return rows.Scan(addr)
 	case *time.Time:
 		return rows.Scan(scannerOf(target, columns[0]))
 	}
