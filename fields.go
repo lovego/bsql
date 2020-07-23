@@ -80,7 +80,11 @@ func FieldsFromStruct(strct interface{}, exclude []string) (result []string) {
 
 func ColumnsComments(table string, strct interface{}) (result string) {
 	traverseStructFields(reflect.TypeOf(strct), func(field reflect.StructField) {
-		if comment, _ := struct_tag.Lookup(string(field.Tag), "comment"); comment != "" {
+		comment, _ := struct_tag.Lookup(string(field.Tag), "c")
+		if comment == "" {
+			comment, _ = struct_tag.Lookup(string(field.Tag), "comment")
+		}
+		if comment != "" {
 			result += fmt.Sprintf(
 				"COMMENT ON COLUMN %s.%s IS %s;\n", table, Field2Column(field.Name), Q(comment),
 			)
