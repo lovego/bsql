@@ -1,19 +1,19 @@
-package bsql
+package position
 
 import "fmt"
 
-func ExampleGetPosition() {
-	fmt.Println(GetPosition([]rune("a"), 0))
-	fmt.Println(GetPosition([]rune("a\nb"), 1))
-	fmt.Println(GetPosition([]rune("中文3\n\n\n6789"), 7))
+func ExampleGet() {
+	fmt.Println(Get([]rune("a"), 0))
+	fmt.Println(Get([]rune("a\nb"), 1))
+	fmt.Println(Get([]rune("中文2\n\n\n6789"), 7))
 
 	// Output:
 	// Line 1: a
-	//         ^
+	// Char 1: ^
 	// Line 1: a
-	//          ^
+	// Char 2:  ^
 	// Line 4: 6789
-	//          ^
+	// Char 2:  ^
 }
 
 func ExampleOffsetToLineAndColumn() {
