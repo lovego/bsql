@@ -48,7 +48,7 @@ select * from (values
 }
 
 func getTestIntValues() *sql.Rows {
-	return getTestRows(`select * from (values (9), (99), (999)) as tmp`)
+	return getTestRows(`select * from (values (9), (99), (999)) as tmp(id)`)
 }
 
 func getTestNull() *sql.Rows {
@@ -149,6 +149,16 @@ func ExampleScan_int() {
 	// Output:
 	// 9
 	// 0
+}
+
+func ExampleScan_singleValueIntoStruct() {
+	var s struct{ Id int }
+	if err := Scan(getTestIntValues(), &s); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(s)
+
+	// Output: {9}
 }
 
 func ExampleScan_uint() {
