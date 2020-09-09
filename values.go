@@ -54,15 +54,19 @@ func StructValues(data interface{}, fields []string) string {
 	case reflect.Slice, reflect.Array:
 		var slice []string
 		for i := 0; i < value.Len(); i++ {
-			slice = append(slice, "("+StructFields(value.Index(i), fields)+")")
+			slice = append(slice, "("+StructFieldsReflect(value.Index(i), fields)+")")
 		}
 		return strings.Join(slice, ",")
 	default:
-		return "(" + StructFields(value, fields) + ")"
+		return "(" + StructFieldsReflect(value, fields) + ")"
 	}
 }
 
-func StructFields(value reflect.Value, fields []string) string {
+func StructFields(value interface{}, fields []string) string {
+	return StructFieldsReflect(reflect.ValueOf(value), fields)
+}
+
+func StructFieldsReflect(value reflect.Value, fields []string) string {
 	if value.Kind() == reflect.Ptr || value.Kind() == reflect.Interface {
 		value = value.Elem()
 	}

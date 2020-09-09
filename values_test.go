@@ -85,19 +85,19 @@ func ExampleStructValues() {
 	// (1,'李雷'),(2,'韩梅梅'),(3,'Lili'),(4,'Lucy')
 }
 
-func ExampleStructValuesIn() {
+func ExampleStructFields() {
 	type student struct {
 		Id        int
 		Name, Sex string
 	}
 	data1 := student{1, "李雷", "男"}
-	fmt.Println(StructFields(reflect.ValueOf(data1), []string{"Id", "Name"}))
+	fmt.Println(StructFields(data1, []string{"Id", "Name"}))
 
 	data2 := &student{1, "李雷", "男"}
-	fmt.Println(StructFields(reflect.ValueOf(data2), []string{"Id", "Name"}))
+	fmt.Println(StructFields(data2, []string{"Id", "Name"}))
 
 	var data3 interface{} = student{1, "李雷", "男"}
-	fmt.Println(StructFields(reflect.ValueOf(data3), []string{"Id", "Name"}))
+	fmt.Println(StructFields(data3, []string{"Id", "Name"}))
 	// Output:
 	// 1,'李雷'
 	// 1,'李雷'
