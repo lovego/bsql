@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/lovego/date"
 	"github.com/shopspring/decimal"
 )
 
@@ -43,7 +44,7 @@ func ExampleV_time() {
 	// '2019-06-19T13:52:08.123456+08:00' '2019-06-19T13:52:08.123456+08:00' <nil>
 }
 
-func ExampleV_driverValuer() {
+func ExampleV_driverValuer_decimal() {
 	var d = decimal.New(1234, -2)
 	fmt.Println(V(d), V(&d))
 	var p *decimal.Decimal
@@ -51,6 +52,13 @@ func ExampleV_driverValuer() {
 	// Output:
 	// 12.34 12.34
 	// NULL
+}
+
+func ExampleV_driverValuer_date() {
+	var d, _ = date.New("2019-01-01")
+	fmt.Println(V(d), V(*d))
+	// Output:
+	// '2019-01-01' '2019-01-01'
 }
 
 // basic types
