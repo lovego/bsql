@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Values return the contents following the sql keyword "values"
+// Values return the contents following the sql keyword "VALUES"
 func Values(data interface{}) string {
 	value := reflect.ValueOf(data)
 	switch value.Kind() {
@@ -54,15 +54,15 @@ func StructValues(data interface{}, fields []string) string {
 	case reflect.Slice, reflect.Array:
 		var slice []string
 		for i := 0; i < value.Len(); i++ {
-			slice = append(slice, StructValuesIn(value.Index(i), fields))
+			slice = append(slice, "("+StructFields(value.Index(i), fields)+")")
 		}
 		return strings.Join(slice, ",")
 	default:
-		return StructValuesIn(value, fields)
+		return "(" + StructFields(value, fields) + ")"
 	}
 }
 
-func StructValuesIn(value reflect.Value, fields []string) string {
+func StructFields(value reflect.Value, fields []string) string {
 	if value.Kind() == reflect.Ptr || value.Kind() == reflect.Interface {
 		value = value.Elem()
 	}
@@ -77,7 +77,7 @@ func StructValuesIn(value reflect.Value, fields []string) string {
 		}
 		slice = append(slice, V(field.Interface()))
 	}
-	return "(" + strings.Join(slice, ",") + ")"
+	return strings.Join(slice, ",")
 }
 
 func StructValuesWithType(data interface{}, fields []string) string {
@@ -87,15 +87,15 @@ func StructValuesWithType(data interface{}, fields []string) string {
 	case reflect.Slice, reflect.Array:
 		var slice []string
 		for i := 0; i < value.Len(); i++ {
-			slice = append(slice, StructValuesInWithType(value.Index(i), typ.Elem(), fields))
+			slice = append(slice, StructFieldsWithType(value.Index(i), typ.Elem(), fields))
 		}
 		return strings.Join(slice, ",")
 	default:
-		return StructValuesInWithType(value, typ, fields)
+		return StructFieldsWithType(value, typ, fields)
 	}
 }
 
-func StructValuesInWithType(value reflect.Value, typ reflect.Type, fields []string) string {
+func StructFieldsWithType(value reflect.Value, typ reflect.Type, fields []string) string {
 	if value.Kind() == reflect.Ptr || value.Kind() == reflect.Interface {
 		value = value.Elem()
 	}

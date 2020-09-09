@@ -91,17 +91,17 @@ func ExampleStructValuesIn() {
 		Name, Sex string
 	}
 	data1 := student{1, "李雷", "男"}
-	fmt.Println(StructValuesIn(reflect.ValueOf(data1), []string{"Id", "Name"}))
+	fmt.Println(StructFields(reflect.ValueOf(data1), []string{"Id", "Name"}))
 
 	data2 := &student{1, "李雷", "男"}
-	fmt.Println(StructValuesIn(reflect.ValueOf(data2), []string{"Id", "Name"}))
+	fmt.Println(StructFields(reflect.ValueOf(data2), []string{"Id", "Name"}))
 
 	var data3 interface{} = student{1, "李雷", "男"}
-	fmt.Println(StructValuesIn(reflect.ValueOf(data3), []string{"Id", "Name"}))
+	fmt.Println(StructFields(reflect.ValueOf(data3), []string{"Id", "Name"}))
 	// Output:
-	// (1,'李雷')
-	// (1,'李雷')
-	// (1,'李雷')
+	// 1,'李雷'
+	// 1,'李雷'
+	// 1,'李雷'
 }
 
 func ExampleStructField() {
