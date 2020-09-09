@@ -55,9 +55,14 @@ func ExampleV_driverValuer_decimal() {
 }
 
 func ExampleV_driverValuer_date() {
-	var d, _ = date.New("2019-01-01")
-	fmt.Println(V(d), V(*d))
+	var d = date.Date{}
+	fmt.Println(V(d), V(&d))
+
+	var d2, _ = date.New("2019-01-01")
+	fmt.Println(V(d2), V(*d2))
+
 	// Output:
+	// NULL NULL
 	// '2019-01-01' '2019-01-01'
 }
 

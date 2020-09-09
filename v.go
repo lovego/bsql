@@ -104,6 +104,8 @@ func valuer(v driver.Valuer) string {
 		log.Panic("bsql valuer: ", err)
 	}
 	switch s := ifc.(type) {
+	case []byte:
+		return string(s)
 	case string:
 		if _, err := strconv.ParseFloat(s, 64); err == nil {
 			return s
