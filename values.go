@@ -26,6 +26,20 @@ func Values(data interface{}) string {
 	}
 }
 
+func MapKeyValues(data interface{}) string {
+	value := reflect.ValueOf(data)
+	switch value.Kind() {
+	case reflect.Map:
+		var slice []string
+		for _, key := range value.MapKeys() {
+			slice = append(slice, V(key.Interface()))
+		}
+		return "(" + strings.Join(slice, ",") + ")"
+	default:
+		return Json(data)
+	}
+}
+
 func SingleColumnValues(data interface{}) string {
 	value := reflect.ValueOf(data)
 	switch value.Kind() {

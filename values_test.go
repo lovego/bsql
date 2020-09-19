@@ -21,6 +21,18 @@ func ExampleValues() {
 	// (1,'a',true),(2,'b',true),(3,'c',false)
 }
 
+func ExampleMapKeyValues() {
+	m := map[string]bool{"('1','2')": true, "('2','1')": true}
+	r := MapKeyValues(map[string]interface{}{"1": 1, "2": "2"})
+	fmt.Println(m[r])
+	m = map[string]bool{"(1,2)": true, "(2,1)": true}
+	r = MapKeyValues(map[int]interface{}{1: 1, 2: "2"})
+	fmt.Println(m[r])
+	// Output:
+	// true
+	// true
+}
+
 func ExampleSingleColumnValues() {
 	fmt.Println(SingleColumnValues(3))
 	fmt.Println(SingleColumnValues("a'bc"))

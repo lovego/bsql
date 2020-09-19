@@ -59,7 +59,7 @@ func ExampleV_driverValuer_date() {
 	fmt.Println(V(d), V(&d))
 
 	var d2 = date.New(2019, 1, 1)
-	fmt.Println(V(d2), V(*d2))
+	fmt.Println(V(d2), V(&d2))
 
 	// Output:
 	// NULL NULL
