@@ -75,6 +75,10 @@ func scanSingleRow(rows *sql.Rows, columns []columnType, target reflect.Value) e
 		if err := scan2Struct(rows, columns, target); err != nil {
 			return err
 		}
+	case reflect.Map:
+		if err := scan2Map(rows, columns, target); err != nil {
+			return err
+		}
 	default:
 		if err := rows.Scan(scannerOf(target, columns[0])); err != nil {
 			return err
@@ -95,5 +99,35 @@ func scan2Struct(rows *sql.Rows, columns []columnType, target reflect.Value) err
 	if err := rows.Scan(scanners...); err != nil {
 		return err
 	}
+	return nil
+}
+
+func scan2Map(rows *sql.Rows, columns []columnType, target reflect.Value) error {
+	if target.IsNil() {
+		target.Set(reflect.MakeMap(target.Type()))
+	}
+
+	var scanners []interface{}
+	for _, column := range columns {
+		scanners = append(scanners, &mapFieldScanner{target, column.FieldName})
+	}
+	if err := rows.Scan(scanners...); err != nil {
+		return err
+	}
+	return nil
+}
+
+type mapFieldScanner struct {
+	m     reflect.Value
+	field string
+}
+
+func (mfs *mapFieldScanner) Scan(src interface{}) error {
+	switch v := src.(type) {
+	case []byte:
+		src = string(v)
+	}
+
+	mfs.m.SetMapIndex(reflect.ValueOf(mfs.field), reflect.ValueOf(src))
 	return nil
 }

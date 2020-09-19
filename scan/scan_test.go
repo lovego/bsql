@@ -93,6 +93,23 @@ func ExampleScan_structSlice() {
 	//   2001-09-01 02:25:48 +0000 UTC 2001-09-02 02:25:58 +0000 UTC}
 }
 
+func ExampleScan_map() {
+	var row = map[string]interface{}{
+		"Cities":    []string{},
+		"FriendIds": pq.Int64Array{},
+	}
+	if err := Scan(getTestStudents(), &row); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(row["CreatedAt"].(time.Time).UTC())
+	delete(row, "CreatedAt")
+
+	fmt.Println(row)
+	// Output:
+	// 2001-09-01 04:25:48 +0000 UTC
+	// map[Cities:{成都,上海} FriendIds:{1001,1002} Id:1 Money:25.04 Name:李雷 Scores:["语文",99,"数学",100] Status:0]
+}
+
 func ExampleScan_string() {
 	var s string
 	if err := Scan(getTestRows(`select 'abc'`), &s); err != nil {
