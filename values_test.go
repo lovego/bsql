@@ -23,12 +23,19 @@ func ExampleValues() {
 
 func ExampleMapKeyValues() {
 	m := map[string]bool{"('1','2')": true, "('2','1')": true}
-	r := MapKeyValues(map[string]interface{}{"1": 1, "2": "2"})
-	fmt.Println(m[r])
+	result := MapKeyValues(map[string]interface{}{"1": nil, "2": nil})
+	fmt.Println(m[result])
+
 	m = map[string]bool{"(1,2)": true, "(2,1)": true}
-	r = MapKeyValues(map[int]interface{}{1: 1, 2: "2"})
-	fmt.Println(m[r])
+	result = MapKeyValues(map[int]interface{}{1: nil, 2: nil})
+	fmt.Println(m[result])
+
+	m = map[string]bool{"(1,2),(3,4)": true, "(3,4),(1,2)": true}
+	result = MapKeyValues(map[[2]int]interface{}{[2]int{1, 2}: nil, [2]int{3, 4}: nil})
+	fmt.Println(m[result])
+
 	// Output:
+	// true
 	// true
 	// true
 }
@@ -67,66 +74,4 @@ func ExampleSliceContents() {
 	// 'jack','rose',1
 	// '{"name":"李雷","age":20}','{"name":"韩梅梅","age":19}'
 	// '{"name":"李雷","age":20}','{"name":"韩梅梅","age":19}'
-}
-
-func ExampleStructValues() {
-	type student struct {
-		Id        int
-		Name, Sex string
-	}
-	data1 := []student{
-		{1, "李雷", "男"}, {2, "韩梅梅", "女"},
-		{3, "Lili", "女"}, {4, "Lucy", "女"},
-	}
-	fmt.Println(StructValues(data1, []string{"Id", "Name"}))
-
-	data2 := []*student{
-		{1, "李雷", "男"}, {2, "韩梅梅", "女"},
-		{3, "Lili", "女"}, {4, "Lucy", "女"},
-	}
-	fmt.Println(StructValues(data2, []string{"Id", "Name"}))
-
-	data3 := []interface{}{
-		student{1, "李雷", "男"}, student{2, "韩梅梅", "女"},
-		student{3, "Lili", "女"}, student{4, "Lucy", "女"},
-	}
-	fmt.Println(StructValues(data3, []string{"Id", "Name"}))
-	// Output:
-	// (1,'李雷'),(2,'韩梅梅'),(3,'Lili'),(4,'Lucy')
-	// (1,'李雷'),(2,'韩梅梅'),(3,'Lili'),(4,'Lucy')
-	// (1,'李雷'),(2,'韩梅梅'),(3,'Lili'),(4,'Lucy')
-}
-
-func ExampleStructFields() {
-	type student struct {
-		Id        int
-		Name, Sex string
-	}
-	data1 := student{1, "李雷", "男"}
-	fmt.Println(StructFields(data1, []string{"Id", "Name"}))
-
-	data2 := &student{1, "李雷", "男"}
-	fmt.Println(StructFields(data2, []string{"Id", "Name"}))
-
-	var data3 interface{} = student{1, "李雷", "男"}
-	fmt.Println(StructFields(data3, []string{"Id", "Name"}))
-	// Output:
-	// 1,'李雷'
-	// 1,'李雷'
-	// 1,'李雷'
-}
-
-func ExampleStructField() {
-	type T2 struct {
-		Name string
-	}
-	type T struct {
-		T2
-	}
-	v := reflect.ValueOf(T{T2{"name"}})
-	fmt.Println(structField(v, "Name").Interface())
-	fmt.Println(structField(v, "T2.Name").Interface())
-	// Output:
-	// name
-	// name
 }
