@@ -77,7 +77,7 @@ func getTestDB() *DB {
 	if err != nil {
 		log.Panic(err)
 	}
-	return &DB{db, time.Second}
+	return &DB{db, time.Second, false}
 }
 
 func ExampleNew() {

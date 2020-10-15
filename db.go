@@ -36,13 +36,14 @@ func IsNil(dbOrTx DbOrTx) bool {
 type DB struct {
 	db      *sql.DB
 	timeout time.Duration
+	FullSql bool // put full sql in error.
 }
 
 func New(db *sql.DB, timeout time.Duration) *DB {
 	if timeout <= 0 {
 		timeout = time.Minute
 	}
-	return &DB{db, timeout}
+	return &DB{db, timeout, false}
 }
 
 func (db *DB) Query(data interface{}, sql string, args ...interface{}) error {
@@ -78,7 +79,7 @@ func (db *DB) query(ctx context.Context,
 		defer rows.Close()
 	}
 	if err != nil {
-		return errs.Trace(ErrorWithPosition(err, sql))
+		return errs.Trace(ErrorWithPosition(err, sql, db.FullSql))
 	}
 	if err := scan.Scan(rows, data); err != nil {
 		return errs.Trace(err)
@@ -98,7 +99,7 @@ func (db *DB) ExecT(duration time.Duration, sql string, args ...interface{}) (sq
 	}
 	result, err := db.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = errs.Trace(ErrorWithPosition(err, sql))
+		err = errs.Trace(ErrorWithPosition(err, sql, db.FullSql))
 	}
 	return result, err
 }
@@ -116,7 +117,7 @@ func (db *DB) ExecCtx(ctx context.Context, opName string,
 	}
 	result, err := db.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = errs.Trace(ErrorWithPosition(err, sql))
+		err = errs.Trace(ErrorWithPosition(err, sql, db.FullSql))
 	}
 	return result, err
 }
@@ -139,7 +140,7 @@ func (db *DB) RunInTransactionT(duration time.Duration, fn func(*Tx) error) erro
 			panic(err)
 		}
 	}()
-	if err := fn(&Tx{tx, db.timeout}); err != nil {
+	if err := fn(&Tx{tx, db.timeout, db.FullSql}); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
@@ -149,7 +150,9 @@ func (db *DB) RunInTransactionT(duration time.Duration, fn func(*Tx) error) erro
 	return nil
 }
 
-func (db *DB) RunInTransactionCtx(ctx context.Context, opName string, fn func(*Tx, context.Context) error) error {
+func (db *DB) RunInTransactionCtx(
+	ctx context.Context, opName string, fn func(*Tx, context.Context) error,
+) error {
 	ctx = tracer.StartChild(ctx, opName)
 	defer tracer.Finish(ctx)
 
@@ -169,7 +172,7 @@ func (db *DB) RunInTransactionCtx(ctx context.Context, opName string, fn func(*T
 			panic(err)
 		}
 	}()
-	if err := fn(&Tx{tx, db.timeout}, ctx); err != nil {
+	if err := fn(&Tx{tx, db.timeout, db.FullSql}, ctx); err != nil {
 		_ = tx.Rollback()
 		return err
 	}

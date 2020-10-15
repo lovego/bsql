@@ -13,6 +13,7 @@ import (
 type Tx struct {
 	tx      *sql.Tx
 	timeout time.Duration
+	FullSql bool // put full sql in error.
 }
 
 func (tx *Tx) Query(data interface{}, sql string, args ...interface{}) error {
@@ -48,7 +49,7 @@ func (tx *Tx) query(ctx context.Context, data interface{}, sql string, args []in
 		defer rows.Close()
 	}
 	if err != nil {
-		return errs.Trace(ErrorWithPosition(err, sql))
+		return errs.Trace(ErrorWithPosition(err, sql, tx.FullSql))
 	}
 	if err := scan.Scan(rows, data); err != nil {
 		return errs.Trace(err)
@@ -70,7 +71,7 @@ func (tx *Tx) ExecT(
 	defer cancel()
 	result, err := tx.tx.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = errs.Trace(ErrorWithPosition(err, sql))
+		err = errs.Trace(ErrorWithPosition(err, sql, tx.FullSql))
 	}
 	return result, err
 }
@@ -89,7 +90,7 @@ func (tx *Tx) ExecCtx(
 	}
 	result, err := tx.tx.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = errs.Trace(ErrorWithPosition(err, sql))
+		err = errs.Trace(ErrorWithPosition(err, sql, tx.FullSql))
 	}
 	return result, err
 }

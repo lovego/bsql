@@ -8,7 +8,7 @@ import (
 	"github.com/lovego/bsql/position"
 )
 
-func ErrorWithPosition(err error, sqlContent string) error {
+func ErrorWithPosition(err error, sqlContent string, fullSql bool) error {
 	if err == nil {
 		return nil
 	}
@@ -24,7 +24,9 @@ func ErrorWithPosition(err error, sqlContent string) error {
 				pqError.Message += fmt.Sprintf(" (Position: %s)", pqError.Position)
 			}
 		}
-		pqError.Message += "\nSql: " + sqlContent
+		if fullSql {
+			pqError.Message += "\nSql: " + sqlContent
+		}
 	}
 	return err
 }
