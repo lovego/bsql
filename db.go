@@ -43,7 +43,7 @@ func New(db *sql.DB, timeout time.Duration) *DB {
 	if timeout <= 0 {
 		timeout = time.Minute
 	}
-	return &DB{db, timeout, false}
+	return &DB{db, timeout, true}
 }
 
 func (db *DB) Query(data interface{}, sql string, args ...interface{}) error {
