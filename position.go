@@ -23,9 +23,8 @@ func ErrorWithPosition(err error, sqlContent string) error {
 			} else {
 				pqError.Message += fmt.Sprintf(" (Position: %s)", pqError.Position)
 			}
-			pqError.Message += "\nSql: " + sqlContent
-
 		}
+		pqError.Message += "\nSql: " + sqlContent
 	}
 	return err
 }
