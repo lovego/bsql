@@ -119,6 +119,12 @@ func getColumnType(field reflect.StructField) string {
 			return "timestamptz"
 		case "Decimal":
 			return "decimal"
+		case "BoolArray":
+			return "bool[]"
+		case "Int64Array":
+			return "bigint[]"
+		case "StringArray":
+			return "text[]"
 		default:
 			return "jsonb"
 		}
