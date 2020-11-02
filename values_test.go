@@ -21,17 +21,17 @@ func ExampleValues() {
 	// (1,'a',true),(2,'b',true),(3,'c',false)
 }
 
-func ExampleMapKeyValues() {
+func ExampleValues_map() {
 	m := map[string]bool{"('1','2')": true, "('2','1')": true}
-	result := MapKeyValues(map[string]interface{}{"1": nil, "2": nil})
+	result := Values(map[string]interface{}{"1": nil, "2": nil})
 	fmt.Println(m[result])
 
 	m = map[string]bool{"(1,2)": true, "(2,1)": true}
-	result = MapKeyValues(map[int]interface{}{1: nil, 2: nil})
+	result = Values(map[int]interface{}{1: nil, 2: nil})
 	fmt.Println(m[result])
 
 	m = map[string]bool{"(1,2),(3,4)": true, "(3,4),(1,2)": true}
-	result = MapKeyValues(map[[2]int]interface{}{[2]int{1, 2}: nil, [2]int{3, 4}: nil})
+	result = Values(map[[2]int]interface{}{[2]int{1, 2}: nil, [2]int{3, 4}: nil})
 	fmt.Println(m[result])
 
 	// Output:

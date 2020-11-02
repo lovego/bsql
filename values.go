@@ -20,14 +20,6 @@ func Values(data interface{}) string {
 		default:
 			return "(" + SliceContents(value) + ")"
 		}
-	default:
-		return "(" + V(data) + ")"
-	}
-}
-
-func MapKeyValues(data interface{}) string {
-	value := reflect.ValueOf(data)
-	switch value.Kind() {
 	case reflect.Map:
 		switch value.Type().Key().Kind() {
 		case reflect.Slice, reflect.Array:
@@ -44,7 +36,7 @@ func MapKeyValues(data interface{}) string {
 			return "(" + strings.Join(slice, ",") + ")"
 		}
 	default:
-		return Json(data)
+		return "(" + V(data) + ")"
 	}
 }
 

@@ -15,6 +15,12 @@ func StructValues(data interface{}, fields []string) string {
 			slice = append(slice, "("+StructFieldsReflect(value.Index(i), fields)+")")
 		}
 		return strings.Join(slice, ",")
+	case reflect.Map:
+		var slice []string
+		for _, key := range value.MapKeys() {
+			slice = append(slice, "("+StructFieldsReflect(key, fields)+")")
+		}
+		return strings.Join(slice, ",")
 	default:
 		return "(" + StructFieldsReflect(value, fields) + ")"
 	}

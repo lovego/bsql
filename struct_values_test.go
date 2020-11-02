@@ -33,6 +33,23 @@ func ExampleStructValues() {
 	// (1,'李雷'),(2,'韩梅梅'),(3,'Lili'),(4,'Lucy')
 }
 
+func ExampleStructValues_map() {
+	type student struct {
+		Id        int
+		Name, Sex string
+	}
+	m := map[string]bool{"(1,'李雷'),(2,'韩梅梅')": true, "(2,'韩梅梅'),(1,'李雷')": true}
+	result := StructValues(map[student]int{
+		student{1, "李雷", "男"}:  1,
+		student{2, "韩梅梅", "女"}: 2,
+	}, []string{"Id", "Name"})
+
+	fmt.Println(m[result])
+
+	// Output:
+	// true
+}
+
 func ExampleStructFields() {
 	type student struct {
 		Id        int
