@@ -117,6 +117,8 @@ func getColumnType(field reflect.StructField) string {
 		switch typ.Name() {
 		case "Time":
 			return "timestamptz"
+		case "Date":
+			return "date"
 		case "Decimal":
 			return "decimal"
 		case "BoolArray":
