@@ -15,6 +15,7 @@ import (
 
 type DbOrTx interface {
 	Query(data interface{}, sql string, args ...interface{}) error
+	QueryCtx(ctx context.Context, opName string, data interface{}, sql string, args ...interface{}) error
 	QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error
 	Exec(sql string, args ...interface{}) (sql.Result, error)
 	ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error)
