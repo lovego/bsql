@@ -5,19 +5,19 @@ import (
 	"strings"
 )
 
-type columnType struct {
+type ColumnType struct {
 	FieldName string
 	*sql.ColumnType
 }
 
-func getColumns(rows *sql.Rows) ([]columnType, error) {
+func ColumnTypes(rows *sql.Rows) ([]ColumnType, error) {
 	columnTypes, err := rows.ColumnTypes()
 	if err != nil {
 		return nil, err
 	}
-	var columns []columnType
+	var columns []ColumnType
 	for _, colType := range columnTypes {
-		columns = append(columns, columnType{
+		columns = append(columns, ColumnType{
 			FieldName: Column2Field(colType.Name()), ColumnType: colType,
 		})
 	}
