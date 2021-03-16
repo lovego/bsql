@@ -19,7 +19,7 @@ func init() {
 
 		"bigint", "int8", "integer", "int", "int4", "smallint", "int2",
 		"bigserial", "serial8", "serial", "serial4", "smallserial", "serial2",
-		"double", "float8", "real", "float4",
+		"real", "float4", "double precision", "float8",
 		"decimal", "numeric", "money",
 
 		"bit", "varbit", "bytea",
@@ -113,6 +113,10 @@ func getColumnType(field reflect.StructField) string {
 		}
 	case reflect.Bool:
 		return "bool"
+	case reflect.Float32:
+		return "float4"
+	case reflect.Float64:
+		return "float8"
 	default:
 		switch typ.Name() {
 		case "Time":
