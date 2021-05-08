@@ -29,7 +29,7 @@ func Scan(rows *sql.Rows, data interface{}) error {
 	if ptr.IsNil() {
 		return errors.New("bsql: data is a nil pointer.")
 	}
-	columns, err := getColumns(rows)
+	columns, err := ColumnTypes(rows)
 	if err != nil {
 		return err
 	}
@@ -43,14 +43,14 @@ func Scan(rows *sql.Rows, data interface{}) error {
 		typ := target.Type().Elem()
 		for rows.Next() {
 			elem := reflect.New(typ).Elem()
-			if err := scanSingleRow(rows, columns, elem); err != nil {
+			if err := ScanRow(rows, columns, elem); err != nil {
 				return err
 			}
 			target.Set(reflect.Append(target, elem))
 		}
 	default:
 		if rows.Next() {
-			if err := scanSingleRow(rows, columns, target); err != nil {
+			if err := ScanRow(rows, columns, target); err != nil {
 				return err
 			}
 		}
@@ -60,7 +60,7 @@ func Scan(rows *sql.Rows, data interface{}) error {
 
 // If target is a struct, it scan all columns into the struct, otherwise it scan a single column.
 // No indirect is performed, because nil value should be set to pointer.
-func scanSingleRow(rows *sql.Rows, columns []columnType, target reflect.Value) error {
+func ScanRow(rows *sql.Rows, columns []ColumnType, target reflect.Value) error {
 	addr := target.Addr().Interface()
 	if scanner := trySqlScanner(addr); scanner != nil {
 		return rows.Scan(scanner)
@@ -87,7 +87,7 @@ func scanSingleRow(rows *sql.Rows, columns []columnType, target reflect.Value) e
 	return nil
 }
 
-func scan2Struct(rows *sql.Rows, columns []columnType, target reflect.Value) error {
+func scan2Struct(rows *sql.Rows, columns []ColumnType, target reflect.Value) error {
 	var scanners []interface{}
 	for _, column := range columns {
 		field := FieldByName(target, column.FieldName)
@@ -102,7 +102,7 @@ func scan2Struct(rows *sql.Rows, columns []columnType, target reflect.Value) err
 	return nil
 }
 
-func scan2Map(rows *sql.Rows, columns []columnType, target reflect.Value) error {
+func scan2Map(rows *sql.Rows, columns []ColumnType, target reflect.Value) error {
 	if target.IsNil() {
 		target.Set(reflect.MakeMap(target.Type()))
 	}

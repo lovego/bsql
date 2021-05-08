@@ -14,7 +14,7 @@ import (
 // otherwise use basicScanner.
 // Because sql.Rows.Scan's builtin logic can't scan nil to int/string,
 // so we always return a sql.Scanner to avoid its builtin logic.
-func scannerOf(dest reflect.Value, column columnType) sql.Scanner {
+func scannerOf(dest reflect.Value, column ColumnType) sql.Scanner {
 	addr := dest.Addr()
 	if scanner := trySqlScanner(addr.Interface()); scanner != nil {
 		return scanner
