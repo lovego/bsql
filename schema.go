@@ -2,28 +2,49 @@ package bsql
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
-// TableSql add create table sql
-// Using name as table name, model struct as table columns and comments.
-func TableSql(name string, model interface{}, constraints, extSqls []string) string {
-	columns := columnsFromStruct(model)
-	columns = append(columns, constraints...)
+type Table struct {
+	Name        string
+	Desc        string
+	Struct      interface{}
+	Constraints []string
+	ExtraSqls   []string
+}
+
+// Sql add create table sql
+// Using Name as table name, Desc as table description, Struct struct as table columns and comments.
+func (t Table) Sql() string {
+	t.Name = strings.TrimSpace(t.Name)
+	if t.Name == "" {
+		log.Panic("table name required")
+	}
+	t.Desc = strings.TrimSpace(t.Desc)
+	if t.Desc == "" {
+		log.Panic("table desc required")
+	}
+	if t.Struct == nil {
+		log.Panic("table struct required")
+	}
+	columns := columnsFromStruct(t.Struct)
+	columns = append(columns, t.Constraints...)
 	for i := range columns {
 		columns[i] = `  ` + strings.TrimRight(strings.TrimSpace(columns[i]), `,`)
 	}
 	columnsStr := strings.Join(columns, ",\n")
 
-	for i := range extSqls {
-		extSqls[i] = ensureTail(strings.TrimSpace(extSqls[i]), ';') + "\n"
+	for i := range t.ExtraSqls {
+		t.ExtraSqls[i] = ensureTail(strings.TrimSpace(t.ExtraSqls[i]), ';') + "\n"
 	}
-	extSqlsStr := strings.Join(extSqls, "")
+	extSqlsStr := strings.Join(t.ExtraSqls, "")
 
 	sql := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 %s
 );
-%s%s`, name, columnsStr, extSqlsStr, ColumnsComments(name, model))
+%sCOMMENT ON TABLE %s is %s;
+%s`, t.Name, columnsStr, extSqlsStr, t.Name, Q(t.Desc), ColumnsComments(t.Name, t.Struct))
 	return sql
 }
 

@@ -17,16 +17,20 @@ func ExampleTableSql_1() {
 
 	extSqls := []string{
 		`
-		CREATE INDEX IF NOT EXISTS order_fields_index1 ON pur.orders
-		(name,field1)
+		CREATE INDEX IF NOT EXISTS order_fields_index1 ON pur.orders (name,field1)
 
 		`,
 		`
-		CREATE INDEX IF NOT EXISTS order_fields_index2 ON pur.orders
-		(name,field2);
+		CREATE INDEX IF NOT EXISTS order_fields_index2 ON pur.orders (name,field2);
 		`,
 	}
-	fmt.Println(TableSql(`pur.orders`, &fakeTable{}, constraints, extSqls))
+	fmt.Println(Table{
+		Name:        `pur.orders`,
+		Desc:        `订单表`,
+		Struct:      &fakeTable{},
+		Constraints: constraints,
+		ExtraSqls:   extSqls,
+	}.Sql())
 
 	// Output:
 	// CREATE TABLE IF NOT EXISTS pur.orders (
@@ -37,10 +41,9 @@ func ExampleTableSql_1() {
 	//   UNIQUE(name),
 	//   UNIQUE(name,field1)
 	// );
-	// CREATE INDEX IF NOT EXISTS order_fields_index1 ON pur.orders
-	// 		(name,field1);
-	// CREATE INDEX IF NOT EXISTS order_fields_index2 ON pur.orders
-	// 		(name,field2);
+	// CREATE INDEX IF NOT EXISTS order_fields_index1 ON pur.orders (name,field1);
+	// CREATE INDEX IF NOT EXISTS order_fields_index2 ON pur.orders (name,field2);
+	// COMMENT ON TABLE pur.orders is '订单表';
 	// COMMENT ON COLUMN pur.orders.id IS '主键ID';
 	// COMMENT ON COLUMN pur.orders.name IS '名称';
 	// COMMENT ON COLUMN pur.orders.field1 IS 'field1';
@@ -48,7 +51,13 @@ func ExampleTableSql_1() {
 }
 
 func ExampleTableSql_2() {
-	fmt.Println(TableSql(`pur.orders`, &fakeTable{}, nil, nil))
+	fmt.Println(Table{
+		Name:        `pur.orders`,
+		Desc:        `采购单`,
+		Struct:      &fakeTable{},
+		Constraints: nil,
+		ExtraSqls:   nil,
+	}.Sql())
 	// Output:
 	// CREATE TABLE IF NOT EXISTS pur.orders (
 	//   id serial8 PRIMARY KEY default null,
@@ -56,6 +65,7 @@ func ExampleTableSql_2() {
 	//   field1 text NOT NULL,
 	//   field2 text NOT NULL
 	// );
+	// COMMENT ON TABLE pur.orders is '采购单';
 	// COMMENT ON COLUMN pur.orders.id IS '主键ID';
 	// COMMENT ON COLUMN pur.orders.name IS '名称';
 	// COMMENT ON COLUMN pur.orders.field1 IS 'field1';
