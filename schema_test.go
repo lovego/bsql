@@ -71,3 +71,27 @@ func ExampleTableSql_2() {
 	// COMMENT ON COLUMN pur.orders.field1 IS 'field1';
 	// COMMENT ON COLUMN pur.orders.field2 IS 'field2';
 }
+
+func ExampleTableSql_3() {
+	fmt.Println(Table{
+		Name:        `pur.orders`,
+		Desc:        `采购单`,
+		Struct:      &fakeTable{},
+		Constraints: nil,
+		Options:     []string{`with (fillfactor = 70)`},
+		ExtraSqls:   nil,
+	}.Sql())
+	// Output:
+	// CREATE TABLE IF NOT EXISTS pur.orders (
+	//   id serial8 PRIMARY KEY default null,
+	//   name text default null,
+	//   field1 text NOT NULL,
+	//   field2 text NOT NULL
+	// )
+	// with (fillfactor = 70);
+	// COMMENT ON TABLE pur.orders is '采购单';
+	// COMMENT ON COLUMN pur.orders.id IS '主键ID';
+	// COMMENT ON COLUMN pur.orders.name IS '名称';
+	// COMMENT ON COLUMN pur.orders.field1 IS 'field1';
+	// COMMENT ON COLUMN pur.orders.field2 IS 'field2';
+}

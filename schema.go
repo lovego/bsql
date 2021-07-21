@@ -11,6 +11,7 @@ type Table struct {
 	Desc        string
 	Struct      interface{}
 	Constraints []string
+	Options     []string
 	ExtraSqls   []string
 }
 
@@ -35,6 +36,11 @@ func (t Table) Sql() string {
 	}
 	columnsStr := strings.Join(columns, ",\n")
 
+	for i := range t.Options {
+		t.Options[i] = "\n" + strings.TrimSpace(t.Options[i])
+	}
+	optionsSql := strings.Join(t.Options, "")
+
 	for i := range t.ExtraSqls {
 		t.ExtraSqls[i] = ensureTail(strings.TrimSpace(t.ExtraSqls[i]), ';') + "\n"
 	}
@@ -42,9 +48,9 @@ func (t Table) Sql() string {
 
 	sql := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 %s
-);
+)%s;
 %sCOMMENT ON TABLE %s is %s;
-%s`, t.Name, columnsStr, extSqlsStr, t.Name, Q(t.Desc), ColumnsComments(t.Name, t.Struct))
+%s`, t.Name, columnsStr, optionsSql, extSqlsStr, t.Name, Q(t.Desc), ColumnsComments(t.Name, t.Struct))
 	return sql
 }
 
