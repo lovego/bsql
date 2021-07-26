@@ -94,3 +94,7 @@ func (tx *Tx) ExecCtx(
 	}
 	return result, err
 }
+
+func (tx *Tx) GetTx() *sql.Tx {
+	return tx.tx
+}
