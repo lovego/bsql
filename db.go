@@ -37,7 +37,7 @@ func IsNil(dbOrTx DbOrTx) bool {
 type DB struct {
 	db      *sql.DB
 	timeout time.Duration
-	FullSql bool // put full sql in error.
+	FullSql bool // put full sql into error.
 }
 
 func New(db *sql.DB, timeout time.Duration) *DB {

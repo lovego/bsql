@@ -13,7 +13,14 @@ import (
 type Tx struct {
 	tx      *sql.Tx
 	timeout time.Duration
-	FullSql bool // put full sql in error.
+	FullSql bool // put full sql into error.
+}
+
+func NewTx(tx *sql.Tx, timeout time.Duration) *Tx {
+	if timeout <= 0 {
+		timeout = time.Minute
+	}
+	return &Tx{tx, timeout, true}
 }
 
 func (tx *Tx) Query(data interface{}, sql string, args ...interface{}) error {
