@@ -23,13 +23,21 @@ func NewTx(tx *sql.Tx, timeout time.Duration) *Tx {
 	return &Tx{tx, timeout, true}
 }
 
+func (tx *Tx) GetTx() *sql.Tx {
+	return tx.tx
+}
+
+func (tx *Tx) SetTimeout(timeout time.Duration) {
+	if timeout > 0 {
+		tx.timeout = timeout
+	}
+}
+
 func (tx *Tx) Query(data interface{}, sql string, args ...interface{}) error {
 	return tx.QueryT(tx.timeout, data, sql, args...)
 }
 
-func (tx *Tx) QueryT(duration time.Duration,
-	data interface{}, sql string, args ...interface{},
-) error {
+func (tx *Tx) QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	defer cancel()
 	return tx.query(ctx, data, sql, args)
@@ -56,7 +64,7 @@ func (tx *Tx) query(ctx context.Context, data interface{}, sql string, args []in
 		defer rows.Close()
 	}
 	if err != nil {
-		return errs.Trace(ErrorWithPosition(err, sql, tx.FullSql))
+		return WrapError(err, sql, tx.FullSql)
 	}
 	if err := scan.Scan(rows, data); err != nil {
 		return errs.Trace(err)
@@ -68,9 +76,7 @@ func (tx *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
 	return tx.ExecT(tx.timeout, sql, args...)
 }
 
-func (tx *Tx) ExecT(
-	duration time.Duration, sql string, args ...interface{},
-) (sql.Result, error) {
+func (tx *Tx) ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error) {
 	if debug {
 		debugSql(sql, args)
 	}
@@ -78,14 +84,12 @@ func (tx *Tx) ExecT(
 	defer cancel()
 	result, err := tx.tx.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = errs.Trace(ErrorWithPosition(err, sql, tx.FullSql))
+		err = WrapError(err, sql, tx.FullSql)
 	}
 	return result, err
 }
 
-func (tx *Tx) ExecCtx(
-	ctx context.Context, opName string, sql string, args ...interface{},
-) (sql.Result, error) {
+func (tx *Tx) ExecCtx(ctx context.Context, opName string, sql string, args ...interface{}) (sql.Result, error) {
 	defer tracer.Finish(tracer.StartChild(ctx, opName))
 	if ctx.Done() == nil {
 		var cancel context.CancelFunc
@@ -97,11 +101,7 @@ func (tx *Tx) ExecCtx(
 	}
 	result, err := tx.tx.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = errs.Trace(ErrorWithPosition(err, sql, tx.FullSql))
+		err = WrapError(err, sql, tx.FullSql)
 	}
 	return result, err
-}
-
-func (tx *Tx) GetTx() *sql.Tx {
-	return tx.tx
 }

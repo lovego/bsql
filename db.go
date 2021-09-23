@@ -3,36 +3,12 @@ package bsql
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"os"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/lovego/bsql/scan"
 	"github.com/lovego/errs"
 	"github.com/lovego/tracer"
 )
-
-type DbOrTx interface {
-	Query(data interface{}, sql string, args ...interface{}) error
-	QueryCtx(ctx context.Context, opName string, data interface{}, sql string, args ...interface{}) error
-	QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error
-	Exec(sql string, args ...interface{}) (sql.Result, error)
-	ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error)
-}
-
-func IsNil(dbOrTx DbOrTx) bool {
-	if dbOrTx == nil {
-		return true
-	}
-	if tx, ok := dbOrTx.(*Tx); ok && tx == nil {
-		return true
-	}
-	if db, ok := dbOrTx.(*DB); ok && db == nil {
-		return true
-	}
-	return false
-}
 
 type DB struct {
 	db      *sql.DB
@@ -45,6 +21,16 @@ func New(db *sql.DB, timeout time.Duration) *DB {
 		timeout = time.Minute
 	}
 	return &DB{db, timeout, true}
+}
+
+func (db *DB) GetDB() *sql.DB {
+	return db.db
+}
+
+func (db *DB) SetTimeout(timeout time.Duration) {
+	if timeout > 0 {
+		db.timeout = timeout
+	}
 }
 
 func (db *DB) Query(data interface{}, sql string, args ...interface{}) error {
@@ -69,9 +55,7 @@ func (db *DB) QueryCtx(ctx context.Context, opName string,
 	return db.query(ctx, data, sql, args)
 }
 
-func (db *DB) query(ctx context.Context,
-	data interface{}, sql string, args []interface{},
-) error {
+func (db *DB) query(ctx context.Context, data interface{}, sql string, args []interface{}) error {
 	if debug {
 		debugSql(sql, args)
 	}
@@ -80,7 +64,7 @@ func (db *DB) query(ctx context.Context,
 		defer rows.Close()
 	}
 	if err != nil {
-		return errs.Trace(ErrorWithPosition(err, sql, db.FullSql))
+		return WrapError(err, sql, db.FullSql)
 	}
 	if err := scan.Scan(rows, data); err != nil {
 		return errs.Trace(err)
@@ -93,20 +77,19 @@ func (db *DB) Exec(sql string, args ...interface{}) (sql.Result, error) {
 }
 
 func (db *DB) ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
-	defer cancel()
 	if debug {
 		debugSql(sql, args)
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
 	result, err := db.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = errs.Trace(ErrorWithPosition(err, sql, db.FullSql))
+		err = WrapError(err, sql, db.FullSql)
 	}
 	return result, err
 }
 
-func (db *DB) ExecCtx(ctx context.Context, opName string,
-	sql string, args ...interface{}) (sql.Result, error) {
+func (db *DB) ExecCtx(ctx context.Context, opName string, sql string, args ...interface{}) (sql.Result, error) {
 	defer tracer.Finish(tracer.StartChild(ctx, opName))
 	if ctx.Done() == nil {
 		var cancel context.CancelFunc
@@ -118,7 +101,7 @@ func (db *DB) ExecCtx(ctx context.Context, opName string,
 	}
 	result, err := db.db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		err = errs.Trace(ErrorWithPosition(err, sql, db.FullSql))
+		err = WrapError(err, sql, db.FullSql)
 	}
 	return result, err
 }
@@ -181,25 +164,4 @@ func (db *DB) RunInTransactionCtx(
 		return errs.Trace(err)
 	}
 	return nil
-}
-
-func (db *DB) GetDB() *sql.DB {
-	return db.db
-}
-
-func (db *DB) SetTimeout(timeout time.Duration) {
-	if timeout > 0 {
-		db.timeout = timeout
-	}
-}
-
-var debug = os.Getenv(`DebugBsql`) != ``
-
-func debugSql(sql string, args []interface{}) {
-	color.Green(sql)
-	argsString := ``
-	for _, arg := range args {
-		argsString += fmt.Sprintf("%#v ", arg)
-	}
-	color.Blue(argsString)
 }
