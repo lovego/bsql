@@ -3,6 +3,7 @@ package bsql
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -50,24 +51,34 @@ func WrapError(err error, sql string, fullSql bool) error {
 	if err == nil {
 		return nil
 	}
-	var positionDesc string
+	erro := errs.Trace(err).(*errs.Error)
+	if fullSql {
+		erro.SetData(GetPosition(err, sql) + "\n" + sql)
+	} else {
+		erro.SetData(GetPosition(err, sql))
+	}
+	return erro
+}
+
+func ErrorWithPosition(err error, sql string) error {
+	if positionDesc := GetPosition(err, sql); positionDesc != "" {
+		return errors.New(err.Error() + "\n" + positionDesc)
+	}
+	return err
+}
+
+func GetPosition(err error, sql string) string {
 	if pqError, ok := err.(*pq.Error); ok {
 		// Position: the field value is a decimal ASCII integer,
 		// indicating an error cursor position as an index into the original query string.
 		// The first character has index 1, and positions are measured in characters not bytes.
 		if offset, err := strconv.Atoi(pqError.Position); err == nil && offset >= 1 {
-			positionDesc = position.Get([]rune(sql), int(offset-1))
+			positionDesc := position.Get([]rune(sql), int(offset-1))
 			if positionDesc == "" {
 				positionDesc = fmt.Sprintf("(Position: %s)", pqError.Position)
 			}
+			return positionDesc
 		}
 	}
-
-	erro := errs.Trace(err).(*errs.Error)
-	if fullSql {
-		erro.SetData(positionDesc + "\n" + sql)
-	} else {
-		erro.SetData(positionDesc)
-	}
-	return erro
+	return ""
 }
