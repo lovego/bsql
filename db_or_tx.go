@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -79,6 +81,25 @@ func GetPosition(err error, sql string) string {
 			}
 			return positionDesc
 		}
+		if pqError != nil {
+			return PrettyPrint(*pqError)
+		}
 	}
 	return ""
+}
+
+func PrettyPrint(v interface{}) string {
+	val := reflect.ValueOf(v)
+	typ := val.Type()
+	if typ.Kind() != reflect.Struct {
+		return fmt.Sprint(v)
+	}
+	var b strings.Builder
+	b.WriteString("{\n")
+	for i := 0; i < typ.NumField(); i++ {
+		v := fmt.Sprint(val.FieldByIndex([]int{i}).Interface())
+		b.WriteString("  " + typ.Field(i).Name + ": " + v + "\n")
+	}
+	b.WriteString("}")
+	return b.String()
 }
