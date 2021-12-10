@@ -70,11 +70,9 @@ func FieldsFromStruct(strct interface{}, exclude []string) (result []string) {
 }
 
 func traverseStructFields(typ reflect.Type, fn func(field reflect.StructField)) {
-	structs.TraverseType(typ, func(field reflect.StructField) {
-		if value, ok := struct_tag.Lookup(string(field.Tag), `sql`); !ok || value != "-" {
-			fn(field)
-		}
-	})
+	structs.TraverseType(typ, func(field reflect.StructField) bool {
+		return struct_tag.Get(string(field.Tag), `sql`) == "-"
+	}, fn)
 }
 
 func notIn(target string, slice []string) bool {
