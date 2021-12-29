@@ -92,6 +92,26 @@ func StructFieldsWithType(value reflect.Value, typ reflect.Type, fields []string
 	return "(" + strings.Join(slice, ",") + ")"
 }
 
+func StructFieldValues(data interface{}, field string) string {
+	value := reflect.ValueOf(data)
+	switch value.Kind() {
+	case reflect.Slice, reflect.Array:
+		var slice []string
+		for i := 0; i < value.Len(); i++ {
+			slice = append(slice, V(structField(value.Index(i), field).Interface()))
+		}
+		return "(" + strings.Join(slice, ",") + ")"
+	case reflect.Map:
+		var slice []string
+		for _, key := range value.MapKeys() {
+			slice = append(slice, V(structField(key, field).Interface()))
+		}
+		return "(" + strings.Join(slice, ",") + ")"
+	default:
+		return "(" + V(structField(value, field).Interface()) + ")"
+	}
+}
+
 func structField(strct reflect.Value, fieldName string) reflect.Value {
 	if strings.IndexByte(fieldName, '.') <= 0 {
 		return strct.FieldByName(fieldName)

@@ -83,3 +83,20 @@ func ExampleStructField() {
 	// name
 	// name
 }
+
+func ExampleStructFiledValues() {
+	type student struct {
+		Id        int
+		Name, Sex string
+	}
+	data1 := []student{
+		{1, "李雷", "男"}, {2, "韩梅梅", "女"},
+		{3, "Lili", "女"}, {4, "Lucy", "女"},
+	}
+	fmt.Println(StructFieldValues(data1, "Id"))
+	fmt.Println(StructFieldValues(data1, "Name"))
+
+	// Output:
+	// (1,2,3,4)
+	// ('李雷','韩梅梅','Lili','Lucy')
+}
