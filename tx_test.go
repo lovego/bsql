@@ -2,7 +2,6 @@ package bsql
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"reflect"
@@ -15,7 +14,6 @@ import (
 
 func TestRunInTransactionAndTx(t *testing.T) {
 	db := getTestDB()
-	defer db.db.Close()
 	if err := db.RunInTransaction(func(tx *Tx) error {
 		runTests(t, tx)
 		return nil
@@ -80,12 +78,7 @@ func ExampleTx_Query() {
 		Name string
 		Age  int
 	}
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	rawTx, err := rawDb.Begin()
+	rawTx, err := rawDB.Begin()
 	if err != nil {
 		log.Panic(err)
 	}
@@ -106,12 +99,7 @@ func ExampleTx_QueryT() {
 		Name string
 		Age  int
 	}
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	rawTx, err := rawDb.Begin()
+	rawTx, err := rawDB.Begin()
 	if err != nil {
 		log.Panic(err)
 	}
@@ -132,12 +120,7 @@ func ExampleTx_QueryCtx() {
 		Name string
 		Age  int
 	}
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	rawTx, err := rawDb.Begin()
+	rawTx, err := rawDB.Begin()
 	if err != nil {
 		log.Panic(err)
 	}
@@ -156,12 +139,7 @@ func ExampleTx_QueryCtx() {
 }
 
 func ExampleTx_Exec() {
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	var affectedRows int64
 	if err := db.RunInTransaction(func(tx *Tx) error {
 		result, err := tx.Exec(`
@@ -195,12 +173,7 @@ func ExampleTx_Exec() {
 }
 
 func ExampleTx_ExecT() {
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	var affectedRows int64
 	if err := db.RunInTransaction(func(tx *Tx) error {
 		result, err := tx.ExecT(time.Second, `
@@ -236,12 +209,7 @@ func ExampleTx_ExecT() {
 }
 
 func ExampleTx_ExecCtx() {
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	var affectedRows int64
 	if err := db.RunInTransaction(func(tx *Tx) error {
 		result, err := tx.ExecCtx(

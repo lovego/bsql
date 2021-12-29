@@ -69,7 +69,7 @@ func ExampleStructFields() {
 	// 1,'李雷'
 }
 
-func ExampleStructField() {
+func ExampleGetValue() {
 	type T2 struct {
 		Name string
 	}
@@ -77,8 +77,8 @@ func ExampleStructField() {
 		T2
 	}
 	v := reflect.ValueOf(T{T2{"name"}})
-	fmt.Println(structField(v, "Name").Interface())
-	fmt.Println(structField(v, "T2.Name").Interface())
+	fmt.Println(getValue(v, "Name").Interface())
+	fmt.Println(getValue(v, "T2.Name").Interface())
 	// Output:
 	// name
 	// name

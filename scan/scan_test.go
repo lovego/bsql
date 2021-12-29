@@ -12,11 +12,11 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-var db *sql.DB
+var testDB *sql.DB
 
 func init() {
 	var err error
-	db, err = sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
+	testDB, err = sql.Open("postgres", "postgres://postgres:postgres@localhost/postgres?sslmode=disable")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -325,7 +325,7 @@ func ExampleScan_interface() {
 }
 
 func getTestRows(sql string) *sql.Rows {
-	rows, err := db.Query(sql)
+	rows, err := testDB.Query(sql)
 	if err != nil {
 		log.Panic(err)
 	}

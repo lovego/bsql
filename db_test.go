@@ -12,6 +12,16 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+var rawDB *sql.DB
+
+func init() {
+	db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost/postgres?sslmode=disable")
+	if err != nil {
+		log.Panic(err)
+	}
+	rawDB = db
+}
+
 type Student struct {
 	Id        int64
 	Name      string
@@ -68,21 +78,16 @@ func createTable(t *testing.T, db DbOrTx) {
 
 func TestDB(t *testing.T) {
 	db := getTestDB()
-	defer db.db.Close()
 	runTests(t, db)
 }
 
 func getTestDB() *DB {
-	db, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	if err != nil {
-		log.Panic(err)
-	}
-	return &DB{db, time.Second, false}
+	return &DB{rawDB, time.Second, false}
 }
 
 func ExampleNew() {
-	var rawDb *sql.DB
-	db := New(rawDb, time.Second)
+	var rawDB *sql.DB
+	db := New(rawDB, time.Second)
 	fmt.Println(db.timeout)
 	// Output:
 	// 1s
@@ -93,12 +98,7 @@ func ExampleDB_Query() {
 		Name string
 		Age  int
 	}
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	if err := db.Query(&people, `select 'jack' as name, 24 as age`); err != nil {
 		log.Panic(err)
 	}
@@ -112,12 +112,7 @@ func ExampleDB_QueryT() {
 		Name string
 		Age  int
 	}
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	if err := db.QueryT(2*time.Second, &people, `select 'jack' as name, 24 as age`); err != nil {
 		log.Panic(err)
 	}
@@ -131,12 +126,7 @@ func ExampleDB_QueryCtx() {
 		Name string
 		Age  int
 	}
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	if err := db.QueryCtx(
 		context.Background(), `query people`, &people, `select 'jack' as name, 24 as age`,
 	); err != nil {
@@ -148,12 +138,7 @@ func ExampleDB_QueryCtx() {
 }
 
 func ExampleDB_Exec() {
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	result, err := db.Exec(`
 		drop table if exists students;
 		create table if not exists students (
@@ -184,12 +169,7 @@ func ExampleDB_Exec() {
 }
 
 func ExampleDB_ExecT() {
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	result, err := db.ExecT(time.Second, `
 		drop table if exists students;
 		create table if not exists students (
@@ -222,12 +202,7 @@ func ExampleDB_ExecT() {
 }
 
 func ExampleDB_ExecCtx() {
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	result, err := db.ExecCtx(
 		context.Background(), `delete people`, `
 		drop table if exists students;
@@ -261,12 +236,7 @@ func ExampleDB_ExecCtx() {
 }
 
 func ExampleDB_RunInTransaction() {
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	var id int
 	if err := db.RunInTransaction(func(tx *Tx) error {
 		if err := tx.Query(&id, `select 10 as id`); err != nil {
@@ -283,12 +253,7 @@ func ExampleDB_RunInTransaction() {
 }
 
 func ExampleDB_RunInTransactionT() {
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	var id int
 	if err := db.RunInTransactionT(5*time.Second, func(tx *Tx) error {
 		if err := tx.Query(&id, `select 10 as id`); err != nil {
@@ -304,12 +269,7 @@ func ExampleDB_RunInTransactionT() {
 }
 
 func ExampleDB_RunInTransactionCtx() {
-	rawDb, err := sql.Open("postgres", "postgres://postgres:@localhost/bsql_test?sslmode=disable")
-	defer rawDb.Close()
-	if err != nil {
-		log.Panic(err)
-	}
-	db := New(rawDb, time.Second)
+	db := New(rawDB, time.Second)
 	var id int
 	if err := db.RunInTransactionCtx(
 		context.Background(), "test RunInTransactionCtx", func(tx *Tx, ctx context.Context) error {

@@ -4,6 +4,8 @@ import (
 	"log"
 	"reflect"
 	"strings"
+
+	"github.com/lovego/value"
 )
 
 func StructValues(data interface{}, fields []string) string {
@@ -39,7 +41,7 @@ func StructFieldsReflect(value reflect.Value, fields []string) string {
 	}
 	var slice []string
 	for _, fieldName := range fields {
-		field := structField(value, fieldName)
+		field := getValue(value, fieldName)
 		if !field.IsValid() {
 			log.Panic("bsql: no field '" + fieldName + "' in struct")
 		}
@@ -75,17 +77,17 @@ func StructFieldsWithType(value reflect.Value, typ reflect.Type, fields []string
 	}
 	var slice []string
 	for _, fieldName := range fields {
-		field := structField(value, fieldName)
+		field := getValue(value, fieldName)
 		if !field.IsValid() {
 			log.Panic("bsql: no field '" + fieldName + "' in struct")
 		}
 		var fieldType string
 		if fieldName != `Id` {
-			structField, ok := typ.FieldByName(fieldName)
+			getValue, ok := typ.FieldByName(fieldName)
 			if !ok {
 				log.Panic("bsql: no field '" + fieldName + "' in struct")
 			}
-			fieldType = "::" + getColumnType(structField)
+			fieldType = "::" + getColumnType(getValue)
 		}
 		slice = append(slice, V(field.Interface())+fieldType)
 	}
@@ -98,29 +100,20 @@ func StructFieldValues(data interface{}, field string) string {
 	case reflect.Slice, reflect.Array:
 		var slice []string
 		for i := 0; i < value.Len(); i++ {
-			slice = append(slice, V(structField(value.Index(i), field).Interface()))
+			slice = append(slice, V(getValue(value.Index(i), field).Interface()))
 		}
 		return "(" + strings.Join(slice, ",") + ")"
 	case reflect.Map:
 		var slice []string
 		for _, key := range value.MapKeys() {
-			slice = append(slice, V(structField(key, field).Interface()))
+			slice = append(slice, V(getValue(key, field).Interface()))
 		}
 		return "(" + strings.Join(slice, ",") + ")"
 	default:
-		return "(" + V(structField(value, field).Interface()) + ")"
+		return "(" + V(getValue(value, field).Interface()) + ")"
 	}
 }
 
-func structField(strct reflect.Value, fieldName string) reflect.Value {
-	if strings.IndexByte(fieldName, '.') <= 0 {
-		return strct.FieldByName(fieldName)
-	}
-	for _, name := range strings.Split(fieldName, ".") {
-		strct = strct.FieldByName(name)
-		if !strct.IsValid() {
-			return strct
-		}
-	}
-	return strct
+func getValue(strct reflect.Value, fieldName string) reflect.Value {
+	return value.Get(strct, strings.Split(fieldName, "."))
 }
