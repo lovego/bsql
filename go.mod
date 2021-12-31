@@ -12,7 +12,7 @@ require (
 	github.com/lovego/struct_tag v0.0.3
 	github.com/lovego/structs v0.0.3
 	github.com/lovego/tracer v0.0.1
-	github.com/lovego/value v0.0.3
+	github.com/lovego/value v0.0.4
 	github.com/mattn/go-runewidth v0.0.13
 	github.com/shopspring/decimal v1.2.0
 	golang.org/x/sys v0.0.0-20210921065528-437939a70204 // indirect
