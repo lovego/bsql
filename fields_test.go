@@ -5,11 +5,12 @@ import (
 )
 
 func ExampleField2Column() {
-	var inputs = []string{"XiaoMei", "HTTPStatus", "You123", "ILoveGolangAndJSONSoMuch"}
+	var inputs = []string{"XiaoMei", "xiaoMei", "HTTPStatus", "You123", "ILoveGolangAndJSONSoMuch"}
 	for i := range inputs {
 		fmt.Println(Field2Column(inputs[i]))
 	}
 	// Output:
+	// xiao_mei
 	// xiao_mei
 	// http_status
 	// you123
