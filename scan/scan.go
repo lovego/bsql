@@ -4,7 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"reflect"
+	"strings"
 	"time"
+
+	"github.com/lovego/value"
 )
 
 // data must be a sql.Scanner or a non nil pointer.
@@ -90,9 +93,10 @@ func ScanRow(rows *sql.Rows, columns []ColumnType, target reflect.Value) error {
 func scan2Struct(rows *sql.Rows, columns []ColumnType, target reflect.Value) error {
 	var scanners []interface{}
 	for _, column := range columns {
-		field := FieldByName(target, column.FieldName)
+		field := value.Settable(target, column.FieldPath)
 		if !field.IsValid() {
-			return errors.New("bsql: no or multiple field '" + column.FieldName + "' in struct")
+			return errors.New("bsql: no or multiple field '" +
+				strings.Join(column.FieldPath, ".") + "' in struct")
 		}
 		scanners = append(scanners, scannerOf(field, column))
 	}

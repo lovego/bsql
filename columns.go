@@ -3,6 +3,7 @@ package bsql
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/lovego/bsql/scan"
 	"github.com/lovego/struct_tag"
@@ -10,7 +11,7 @@ import (
 
 func Columns2Fields(columns []string) (result []string) {
 	for _, column := range columns {
-		result = append(result, scan.Column2Field(column))
+		result = append(result, strings.Join(scan.Column2FieldPath(column), "."))
 	}
 	return result
 }

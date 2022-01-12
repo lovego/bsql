@@ -324,6 +324,21 @@ func ExampleScan_interface() {
 	// 12 12 uint64
 }
 
+func ExampleScan_multiLayers() {
+	var s struct {
+		A struct {
+			B int
+		}
+	}
+	if err := Scan(getTestRows(`SELECT 12 AS "a.b"`), &s); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println(s)
+
+	// Output:
+	// {{12}}
+}
+
 func getTestRows(sql string) *sql.Rows {
 	rows, err := testDB.Query(sql)
 	if err != nil {
