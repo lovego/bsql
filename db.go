@@ -12,7 +12,8 @@ import (
 
 type DB struct {
 	db      *sql.DB
-	timeout time.Duration
+	timeout time.Duration // default timeout for Query, Exec and transactions.
+	Context context.Context
 	FullSql bool // put full sql into error.
 }
 
@@ -20,7 +21,7 @@ func New(db *sql.DB, timeout time.Duration) *DB {
 	if timeout <= 0 {
 		timeout = time.Minute
 	}
-	return &DB{db, timeout, true}
+	return &DB{db: db, timeout: timeout, FullSql: true}
 }
 
 func (db *DB) GetDB() *sql.DB {
@@ -38,7 +39,7 @@ func (db *DB) Query(data interface{}, sql string, args ...interface{}) error {
 }
 
 func (db *DB) QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error {
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	ctx, cancel := db.context(duration)
 	defer cancel()
 	return db.query(ctx, data, sql, args)
 }
@@ -80,7 +81,7 @@ func (db *DB) ExecT(duration time.Duration, sql string, args ...interface{}) (sq
 	if debug {
 		debugSql(sql, args)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	ctx, cancel := db.context(duration)
 	defer cancel()
 	result, err := db.db.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -111,7 +112,7 @@ func (db *DB) RunInTransaction(fn func(*Tx) error) error {
 }
 
 func (db *DB) RunInTransactionT(duration time.Duration, fn func(*Tx) error) error {
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	ctx, cancel := db.context(duration)
 	defer cancel()
 
 	tx, err := db.db.BeginTx(ctx, nil)
@@ -124,7 +125,7 @@ func (db *DB) RunInTransactionT(duration time.Duration, fn func(*Tx) error) erro
 			panic(err)
 		}
 	}()
-	if err := fn(&Tx{tx, db.timeout, db.FullSql}); err != nil {
+	if err := fn(&Tx{tx: tx, timeout: db.timeout, FullSql: db.FullSql}); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
@@ -156,7 +157,7 @@ func (db *DB) RunInTransactionCtx(
 			panic(err)
 		}
 	}()
-	if err := fn(&Tx{tx, db.timeout, db.FullSql}, ctx); err != nil {
+	if err := fn(&Tx{tx: tx, timeout: db.timeout, FullSql: db.FullSql}, ctx); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
@@ -164,4 +165,12 @@ func (db *DB) RunInTransactionCtx(
 		return errs.Trace(err)
 	}
 	return nil
+}
+
+func (db *DB) context(timeout time.Duration) (context.Context, context.CancelFunc) {
+	var ctx = db.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return context.WithTimeout(ctx, timeout)
 }

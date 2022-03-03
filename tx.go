@@ -12,7 +12,8 @@ import (
 
 type Tx struct {
 	tx      *sql.Tx
-	timeout time.Duration
+	timeout time.Duration // default timeout for Query or Exec.
+	Context context.Context
 	FullSql bool // put full sql into error.
 }
 
@@ -20,7 +21,7 @@ func NewTx(tx *sql.Tx, timeout time.Duration) *Tx {
 	if timeout <= 0 {
 		timeout = time.Minute
 	}
-	return &Tx{tx, timeout, true}
+	return &Tx{tx: tx, timeout: timeout, FullSql: true}
 }
 
 func (tx *Tx) GetTx() *sql.Tx {
@@ -38,7 +39,7 @@ func (tx *Tx) Query(data interface{}, sql string, args ...interface{}) error {
 }
 
 func (tx *Tx) QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error {
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	ctx, cancel := tx.context(duration)
 	defer cancel()
 	return tx.query(ctx, data, sql, args)
 }
@@ -80,7 +81,7 @@ func (tx *Tx) ExecT(duration time.Duration, sql string, args ...interface{}) (sq
 	if debug {
 		debugSql(sql, args)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), duration)
+	ctx, cancel := tx.context(duration)
 	defer cancel()
 	result, err := tx.tx.ExecContext(ctx, sql, args...)
 	if err != nil {
@@ -104,4 +105,12 @@ func (tx *Tx) ExecCtx(ctx context.Context, opName string, sql string, args ...in
 		err = WrapError(err, sql, tx.FullSql)
 	}
 	return result, err
+}
+
+func (tx *Tx) context(timeout time.Duration) (context.Context, context.CancelFunc) {
+	var ctx = tx.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return context.WithTimeout(ctx, timeout)
 }

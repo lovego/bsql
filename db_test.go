@@ -82,7 +82,7 @@ func TestDB(t *testing.T) {
 }
 
 func getTestDB() *DB {
-	return &DB{rawDB, time.Second, false}
+	return &DB{db: rawDB, timeout: time.Second, FullSql: false}
 }
 
 func ExampleNew() {
