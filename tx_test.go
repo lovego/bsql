@@ -83,8 +83,8 @@ func ExampleTx_Query() {
 		log.Panic(err)
 	}
 	var tx = &Tx{
-		tx:      rawTx,
-		timeout: time.Second,
+		Tx:      rawTx,
+		Timeout: time.Second,
 	}
 	if err := tx.Query(&people, `select 'jack' as name, 24 as age`); err != nil {
 		log.Panic(err)
@@ -104,8 +104,8 @@ func ExampleTx_QueryT() {
 		log.Panic(err)
 	}
 	var tx = &Tx{
-		tx:      rawTx,
-		timeout: time.Second,
+		Tx:      rawTx,
+		Timeout: time.Second,
 	}
 	if err := tx.QueryT(2*time.Second, &people, `select 'jack' as name, 24 as age`); err != nil {
 		log.Panic(err)
@@ -125,8 +125,8 @@ func ExampleTx_QueryCtx() {
 		log.Panic(err)
 	}
 	var tx = &Tx{
-		tx:      rawTx,
-		timeout: time.Second,
+		Tx:      rawTx,
+		Timeout: time.Second,
 	}
 	if err := tx.QueryCtx(
 		context.Background(), `query people`, &people, `select 'jack' as name, 24 as age`,

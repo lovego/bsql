@@ -82,13 +82,13 @@ func TestDB(t *testing.T) {
 }
 
 func getTestDB() *DB {
-	return &DB{db: rawDB, timeout: time.Second, FullSql: false}
+	return &DB{DB: rawDB, Timeout: time.Second, PutSqlInError: false}
 }
 
 func ExampleNew() {
 	var rawDB *sql.DB
 	db := New(rawDB, time.Second)
-	fmt.Println(db.timeout)
+	fmt.Println(db.Timeout)
 	// Output:
 	// 1s
 }

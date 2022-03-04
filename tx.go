@@ -3,6 +3,7 @@ package bsql
 import (
 	"context"
 	"database/sql"
+	"io"
 	"time"
 
 	"github.com/lovego/bsql/scan"
@@ -11,31 +12,23 @@ import (
 )
 
 type Tx struct {
-	tx      *sql.Tx
-	timeout time.Duration // default timeout for Query or Exec.
-	Context context.Context
-	FullSql bool // put full sql into error.
+	Tx            *sql.Tx
+	Context       context.Context
+	Timeout       time.Duration // default timeout for Query or Exec.
+	Debug         bool
+	DebugOutput   io.Writer
+	PutSqlInError bool // put sql into returned error if error happend .
 }
 
 func NewTx(tx *sql.Tx, timeout time.Duration) *Tx {
 	if timeout <= 0 {
 		timeout = time.Minute
 	}
-	return &Tx{tx: tx, timeout: timeout, FullSql: true}
-}
-
-func (tx *Tx) GetTx() *sql.Tx {
-	return tx.tx
-}
-
-func (tx *Tx) SetTimeout(timeout time.Duration) {
-	if timeout > 0 {
-		tx.timeout = timeout
-	}
+	return &Tx{Tx: tx, Timeout: timeout, PutSqlInError: true}
 }
 
 func (tx *Tx) Query(data interface{}, sql string, args ...interface{}) error {
-	return tx.QueryT(tx.timeout, data, sql, args...)
+	return tx.QueryT(tx.Timeout, data, sql, args...)
 }
 
 func (tx *Tx) QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error {
@@ -50,61 +43,61 @@ func (tx *Tx) QueryCtx(ctx context.Context, opName string,
 	defer tracer.Finish(tracer.StartChild(ctx, opName))
 	if ctx.Done() == nil {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, tx.timeout)
+		ctx, cancel = context.WithTimeout(ctx, tx.Timeout)
 		defer cancel()
 	}
 	return tx.query(ctx, data, sql, args)
 }
 
-func (tx *Tx) query(ctx context.Context, data interface{}, sql string, args []interface{}) error {
-	if debug {
-		debugSql(sql, args)
-	}
-	rows, err := tx.tx.QueryContext(ctx, sql, args...)
-	if rows != nil {
-		defer rows.Close()
-	}
-	if err != nil {
-		return WrapError(err, sql, tx.FullSql)
-	}
-	if err := scan.Scan(rows, data); err != nil {
-		return errs.Trace(err)
-	}
-	return nil
-}
-
 func (tx *Tx) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	return tx.ExecT(tx.timeout, sql, args...)
+	return tx.ExecT(tx.Timeout, sql, args...)
 }
 
 func (tx *Tx) ExecT(duration time.Duration, sql string, args ...interface{}) (sql.Result, error) {
-	if debug {
-		debugSql(sql, args)
-	}
 	ctx, cancel := tx.context(duration)
 	defer cancel()
-	result, err := tx.tx.ExecContext(ctx, sql, args...)
-	if err != nil {
-		err = WrapError(err, sql, tx.FullSql)
-	}
-	return result, err
+	return tx.exec(ctx, sql, args)
 }
 
 func (tx *Tx) ExecCtx(ctx context.Context, opName string, sql string, args ...interface{}) (sql.Result, error) {
 	defer tracer.Finish(tracer.StartChild(ctx, opName))
 	if ctx.Done() == nil {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, tx.timeout)
+		ctx, cancel = context.WithTimeout(ctx, tx.Timeout)
 		defer cancel()
 	}
-	if debug {
-		debugSql(sql, args)
-	}
-	result, err := tx.tx.ExecContext(ctx, sql, args...)
-	if err != nil {
-		err = WrapError(err, sql, tx.FullSql)
-	}
-	return result, err
+	return tx.exec(ctx, sql, args)
+}
+
+func (tx *Tx) query(ctx context.Context, data interface{}, sql string, args []interface{}) error {
+	return run(tx.Debug, tx.DebugOutput, tx.PutSqlInError, sql, args,
+		func() (scanAt time.Time, err error) {
+			rows, err := tx.Tx.QueryContext(ctx, sql, args...)
+			if rows != nil {
+				defer rows.Close()
+			}
+			if err != nil {
+				return scanAt, errs.Trace(err)
+			}
+			if tx.Debug {
+				scanAt = time.Now()
+			}
+			if err := scan.Scan(rows, data); err != nil {
+				return scanAt, errs.Trace(err)
+			}
+			return
+		})
+}
+
+func (tx *Tx) exec(
+	ctx context.Context, sql string, args []interface{},
+) (result sql.Result, err error) {
+	err = run(tx.Debug, tx.DebugOutput, tx.PutSqlInError, sql, args,
+		func() (time.Time, error) {
+			result, err = tx.Tx.ExecContext(ctx, sql, args...)
+			return time.Time{}, errs.Trace(err)
+		})
+	return
 }
 
 func (tx *Tx) context(timeout time.Duration) (context.Context, context.CancelFunc) {

@@ -5,16 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/lib/pq"
 	"github.com/lovego/bsql/position"
-	"github.com/lovego/errs"
 )
 
 type DbOrTx interface {
@@ -36,30 +33,6 @@ func IsNil(dbOrTx DbOrTx) bool {
 		return true
 	}
 	return false
-}
-
-var debug = os.Getenv(`DebugBsql`) != ``
-
-func debugSql(sql string, args []interface{}) {
-	color.Green(sql)
-	argsString := ``
-	for _, arg := range args {
-		argsString += fmt.Sprintf("%#v ", arg)
-	}
-	color.Blue(argsString)
-}
-
-func WrapError(err error, sql string, fullSql bool) error {
-	if err == nil {
-		return nil
-	}
-	erro := errs.Trace(err).(*errs.Error)
-	if fullSql {
-		erro.SetData(GetPosition(err, sql) + "\n" + sql)
-	} else {
-		erro.SetData(GetPosition(err, sql))
-	}
-	return erro
 }
 
 func ErrorWithPosition(err error, sql string) error {
