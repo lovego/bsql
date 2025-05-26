@@ -48,7 +48,7 @@ func Scan(rows *sql.Rows, data interface{}, append ...bool) error {
 		var i = 0
 		for rows.Next() {
 			var elem reflect.Value
-			if len(append) > 0 && !append[0] && target.Len() > i {
+			if len(append) > 0 && !append[0] && target.Len() > i { // specified not append elem
 				elem = target.Index(i)
 			} else {
 				elem = reflect.New(typ).Elem()
@@ -56,7 +56,8 @@ func Scan(rows *sql.Rows, data interface{}, append ...bool) error {
 			if err := ScanRow(rows, columns, elem); err != nil {
 				return err
 			}
-			if target.Len() <= i {
+			if len(append) > 0 && !append[0] && target.Len() > i {
+			} else { // append the reflect.New elem
 				target.Set(reflect.Append(target, elem))
 			}
 			i++
