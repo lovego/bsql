@@ -88,7 +88,7 @@ func (db *DB) ExecCtx(
 	return db.exec(ctx, sql, args)
 }
 
-func (db *DB) query(ctx context.Context, data interface{}, sql string, args []interface{}, append ...bool) error {
+func (db *DB) query(ctx context.Context, data interface{}, sql string, args []interface{}, reuse ...bool) error {
 	return run(db.Debug, db.DebugOutput, db.PutSqlInError, sql, args,
 		func() (scanAt time.Time, err error) {
 			rows, err := db.DB.QueryContext(ctx, sql, args...)
@@ -101,7 +101,7 @@ func (db *DB) query(ctx context.Context, data interface{}, sql string, args []in
 			if db.Debug {
 				scanAt = time.Now()
 			}
-			if err := scan.Scan(rows, data, append...); err != nil {
+			if err := scan.Scan(rows, data, reuse...); err != nil {
 				return scanAt, errs.Trace(err)
 			}
 			return scanAt, nil
