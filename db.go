@@ -41,6 +41,13 @@ func (db *DB) Query(data interface{}, sql string, args ...interface{}) error {
 	return db.QueryT(db.Timeout, data, sql, args...)
 }
 
+// query and return to data when do exec and returning
+func (db *DB) QueryR(data interface{}, sql string, args ...interface{}) error {
+	ctx, cancel := db.context(db.Timeout)
+	defer cancel()
+	return db.query(ctx, data, sql, args, true)
+}
+
 func (db *DB) QueryT(duration time.Duration, data interface{}, sql string, args ...interface{}) error {
 	ctx, cancel := db.context(duration)
 	defer cancel()
@@ -81,7 +88,7 @@ func (db *DB) ExecCtx(
 	return db.exec(ctx, sql, args)
 }
 
-func (db *DB) query(ctx context.Context, data interface{}, sql string, args []interface{}) error {
+func (db *DB) query(ctx context.Context, data interface{}, sql string, args []interface{}, append ...bool) error {
 	return run(db.Debug, db.DebugOutput, db.PutSqlInError, sql, args,
 		func() (scanAt time.Time, err error) {
 			rows, err := db.DB.QueryContext(ctx, sql, args...)
@@ -94,7 +101,7 @@ func (db *DB) query(ctx context.Context, data interface{}, sql string, args []in
 			if db.Debug {
 				scanAt = time.Now()
 			}
-			if err := scan.Scan(rows, data); err != nil {
+			if err := scan.Scan(rows, data, append...); err != nil {
 				return scanAt, errs.Trace(err)
 			}
 			return scanAt, nil

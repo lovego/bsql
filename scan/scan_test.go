@@ -16,7 +16,7 @@ var testDB *sql.DB
 
 func init() {
 	var err error
-	testDB, err = sql.Open("postgres", "postgres://postgres:postgres@localhost/postgres?sslmode=disable")
+	testDB, err = sql.Open("postgres", "postgres://develop:@localhost:5432/postgres?sslmode=disable")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -73,6 +73,58 @@ func ExampleScan_struct() {
 func ExampleScan_structSlice() {
 	var rows []Student
 	if err := Scan(getTestStudents(), &rows); err != nil {
+		log.Panic(err)
+	}
+	for _, row := range rows {
+		row.CreatedAt = row.CreatedAt.UTC()
+		if row.UpdatedAt != nil {
+			t := row.UpdatedAt.UTC()
+			row.UpdatedAt = &t
+		}
+		fmt.Printf("{%d %s %v %v %v %v %d\n  %v %v}\n",
+			row.Id, row.Name, row.Cities, row.FriendIds, row.Scores, row.Money, row.Status,
+			row.CreatedAt, row.UpdatedAt,
+		)
+	}
+	// Output:
+	// {1 李雷 [成都 上海] [1001 1002] [语文 99 数学 100] 25.04 0
+	//   2001-09-01 04:25:48 +0000 UTC <nil>}
+	// {2 韩梅梅 [广州 北京] [1001 1003] [语文 98 数学 95] 95.9 0
+	//   2001-09-01 02:25:48 +0000 UTC 2001-09-02 02:25:58 +0000 UTC}
+}
+
+func ExampleScan_structSlice_no_reuse() {
+	var rows = []Student{
+		Student{Id: 111, Name: "hhh"},
+	}
+	if err := Scan(getTestStudents(), &rows); err != nil {
+		log.Panic(err)
+	}
+	for _, row := range rows {
+		row.CreatedAt = row.CreatedAt.UTC()
+		if row.UpdatedAt != nil {
+			t := row.UpdatedAt.UTC()
+			row.UpdatedAt = &t
+		}
+		fmt.Printf("{%d %s %v %v %v %v %d\n  %v %v}\n",
+			row.Id, row.Name, row.Cities, row.FriendIds, row.Scores, row.Money, row.Status,
+			row.CreatedAt, row.UpdatedAt,
+		)
+	}
+	// Output:
+	// {111 hhh [] [] [] 0 0
+	//   0001-01-01 00:00:00 +0000 UTC <nil>}
+	// {1 李雷 [成都 上海] [1001 1002] [语文 99 数学 100] 25.04 0
+	//   2001-09-01 04:25:48 +0000 UTC <nil>}
+	// {2 韩梅梅 [广州 北京] [1001 1003] [语文 98 数学 95] 95.9 0
+	//   2001-09-01 02:25:48 +0000 UTC 2001-09-02 02:25:58 +0000 UTC}
+}
+
+func ExampleScan_structSlice_reuse() {
+	var rows = []Student{
+		Student{Name: "hhh"},
+	}
+	if err := Scan(getTestStudents(), &rows, true); err != nil {
 		log.Panic(err)
 	}
 	for _, row := range rows {

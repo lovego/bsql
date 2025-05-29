@@ -15,8 +15,8 @@ import (
 // And it's indirect only once, we cann't indirect all pointer until non pointer type,
 // because nil value should be set to the second layer pointer, not the non pointer type.
 // If target is a slice, it scan all rows into the slice, otherwise it scan a single row.
-// args append: append new elem for Type Slice
-func Scan(rows *sql.Rows, data interface{}, append ...bool) error {
+// args reuse: reuse the data if is slice
+func Scan(rows *sql.Rows, data interface{}, reuse ...bool) error {
 	if scanner := trySqlScanner(data); scanner != nil {
 		if rows.Next() {
 			if err := rows.Scan(scanner); err != nil {
@@ -48,7 +48,7 @@ func Scan(rows *sql.Rows, data interface{}, append ...bool) error {
 		var i = 0
 		for rows.Next() {
 			var elem reflect.Value
-			if len(append) > 0 && !append[0] && target.Len() > i { // specified not append elem
+			if len(reuse) > 0 && reuse[0] && target.Len() > i { // specified reuse and data lengh enough
 				elem = target.Index(i)
 			} else {
 				elem = reflect.New(typ).Elem()
@@ -56,7 +56,7 @@ func Scan(rows *sql.Rows, data interface{}, append ...bool) error {
 			if err := ScanRow(rows, columns, elem); err != nil {
 				return err
 			}
-			if len(append) > 0 && !append[0] && target.Len() > i {
+			if len(reuse) > 0 && reuse[0] && target.Len() > i {
 			} else { // append the reflect.New elem
 				target.Set(reflect.Append(target, elem))
 			}

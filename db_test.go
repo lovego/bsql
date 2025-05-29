@@ -15,7 +15,7 @@ import (
 var rawDB *sql.DB
 
 func init() {
-	db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost/postgres?sslmode=disable")
+	db, err := sql.Open("postgres", "postgres://develop:@localhost/postgres?sslmode=disable")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -103,6 +103,47 @@ func ExampleDB_Query() {
 		log.Panic(err)
 	}
 	fmt.Printf("%+v", people)
+	// Output:
+	// {Name:jack Age:24}
+}
+
+func ExampleDB_Query_no_reuse() {
+	var people = []struct {
+		Name string
+		Age  int
+	}{
+		{
+			Name: "hhh",
+		},
+	}
+	db := New(rawDB, time.Second)
+	if err := db.Query(&people, `select 'jack' as name, 24 as age`); err != nil {
+		log.Panic(err)
+	}
+	for i := range people {
+		fmt.Printf("%+v\n", people[i])
+	}
+	// Output:
+	// {Name:hhh Age:0}
+	// {Name:jack Age:24}
+}
+
+func ExampleDB_QueryR_reuse() {
+	var people = []struct {
+		Name string
+		Age  int
+	}{
+		{
+			Name: "hhh",
+		},
+	}
+	db := New(rawDB, time.Second)
+	if err := db.QueryR(&people, `select 'jack' as name, 24 as age`); err != nil {
+		log.Panic(err)
+	}
+	for i := range people {
+		fmt.Printf("%+v\n", people[i])
+	}
 	// Output:
 	// {Name:jack Age:24}
 }
