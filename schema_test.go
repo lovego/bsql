@@ -30,6 +30,7 @@ func ExampleTableSql_1() {
 		Struct:      &fakeTable{},
 		Constraints: constraints,
 		ExtraSqls:   extSqls,
+		Increment:   100,
 	}.Sql())
 
 	// Output:
@@ -41,6 +42,7 @@ func ExampleTableSql_1() {
 	//   UNIQUE(name),
 	//   UNIQUE(name,field1)
 	// );
+	// ALTER sequence pur.orders_id_seq INCREMENT 100;
 	// CREATE INDEX IF NOT EXISTS order_fields_index1 ON pur.orders (name,field1);
 	// CREATE INDEX IF NOT EXISTS order_fields_index2 ON pur.orders (name,field2);
 	// COMMENT ON TABLE pur.orders is '订单表';
