@@ -27,6 +27,10 @@ func NewTx(tx *sql.Tx, timeout time.Duration) *Tx {
 	return &Tx{Tx: tx, Timeout: timeout, PutSqlInError: true}
 }
 
+func (tx *Tx) GetTx() *sql.Tx {
+	return tx.tx
+}
+
 func (tx *Tx) Query(data interface{}, sql string, args ...interface{}) error {
 	return tx.QueryT(tx.Timeout, data, sql, args...)
 }
