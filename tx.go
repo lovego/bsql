@@ -28,7 +28,7 @@ func NewTx(tx *sql.Tx, timeout time.Duration) *Tx {
 }
 
 func (tx *Tx) GetTx() *sql.Tx {
-	return tx.tx
+	return tx.Tx
 }
 
 func (tx *Tx) Query(data interface{}, sql string, args ...interface{}) error {
